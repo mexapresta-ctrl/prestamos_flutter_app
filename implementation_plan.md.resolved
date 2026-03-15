@@ -1,0 +1,33 @@
+# Goal Description
+Build an independent Flutter mobile app (`prestamos_app`) that replicates the functionality and information of the existing React web application (`prestamos-web`). The application will be styled strictly following the visual rules defined in [INTERFAZ.html](file:///c:/Users/LESLY/Downloads/prestamos-app/INTERFAZ.html). Crucially, local builds are disabled; the project will rely on GitHub Actions to compile and deploy the APK via cloud build.
+
+## Proposed Changes
+
+### 1. Flutter Project Initialization
+- Create a new Flutter project in `C:\Users\LESLY\Downloads\prestamos_app`.
+- Add dependencies: `supabase_flutter` for backend, `google_fonts` for typography (Plus Jakarta Sans, Fraunces, JetBrains Mono), `flutter_riverpod` for state management, `lucide_icons` or similar to replicate the "Fluent two-tone" icons described in the HTML.
+
+### 2. Design System ([INTERFAZ.html](file:///c:/Users/LESLY/Downloads/prestamos-app/INTERFAZ.html) translation)
+- **Colors**: Define palettes for Admin, Cobrador, Asesor, and semantic colors (OK, Warn, Err, Info) in a generic `AppTheme` class.
+- **Typography**: Apply Google Fonts styles following the guide (e.g. Fraunces for Hero amounts, Plus Jakarta Sans for body and headings).
+- **Components**: Build reusable widgets:
+  - `RoleChip`
+  - `HeroCard` (with gradients depending on role)
+  - `StatCard`
+  - `ListCard` (Clients / Credits)
+  - `CustomButton` (with role gradients)
+  - `CustomInput`
+  - `ConfirmModal`
+
+### 3. Screen Replication
+- Replicate standard workflows (Login, Dashboards for each role) mirroring data pulled from Supabase (as identified in [package.json](file:///C:/Users/LESLY/Downloads/prestamos-web/package.json) of the web app).
+
+### 4. GitHub Actions (CI/CD)
+- Create `.github/workflows/build.yml` to automatically build the Android APK upon pushing to the `main` branch, ensuring local builds are bypassed.
+
+## Verification Plan
+### Automated Tests
+- Validate GitHub Actions run successfully by triggering a push and confirming the artifact (APK) is produced.
+### Manual Verification
+- Review UI implementation pixel-by-pixel against the HTML guideline.
+- Ensure Supabase authentication and basic data retrieval works in the Flutter debug session before pushing.

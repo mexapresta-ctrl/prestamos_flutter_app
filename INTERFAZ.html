@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoanOS — Guía Visual</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,600;1,300&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --admin:  #3447E8; --admin-l: #6978FF; --admin-s: #ECEDFE;
+  --cob:    #0A7C5C; --cob-l:   #1DB888; --cob-s:   #E4F5F0;
+  --ase:    #C44C0A; --ase-l:   #F06820; --ase-s:   #FDEFEA;
+  --ok:     #0A7050; --ok-s:    #E3F5EE;
+  --warn:   #9A5500; --warn-s:  #FEF3E2;
+  --err:    #B82428; --err-s:   #FCEAEA;
+  --info:   #1840BA; --info-s:  #EBF0FC;
+  --ink:    #090B1C; --ink2: #1E2040; --ink3: #525880; --ink4: #8E93BA; --ink5: #C4C7DE;
+  --bg:     #F2F1F9; --s1: #F8F7FF; --s2: #F1F0FA; --s3: #E8E7F5; --b: #E0DFF4;
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--ink); line-height: 1.5; }
+
+/* ── DOC ── */
+.doc { max-width: 900px; margin: 0 auto; padding: 56px 32px 120px; }
+
+/* ── COVER ── */
+.cover { text-align: center; padding: 72px 0 64px; border-bottom: 1px solid var(--b); margin-bottom: 72px; }
+.cover-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 20px; }
+.cover-title { font-family: 'Fraunces', serif; font-size: 80px; font-weight: 600; letter-spacing: -3px; line-height: .9; color: var(--ink); margin-bottom: 14px; }
+.cover-title em { font-style: italic; font-weight: 300; color: var(--admin); }
+.cover-sub { font-size: 16px; color: var(--ink3); max-width: 440px; margin: 0 auto; }
+
+/* ── SECTION ── */
+.section { margin-bottom: 80px; }
+.sec-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: var(--admin); margin-bottom: 10px; }
+.sec-title { font-family: 'Fraunces', serif; font-size: 36px; font-weight: 600; letter-spacing: -1px; color: var(--ink); margin-bottom: 32px; }
+.sec-title em { font-style: italic; font-weight: 300; color: var(--admin); }
+
+/* ── RULE ── */
+.rule { border: none; border-top: 1px solid var(--b); margin: 72px 0 0; }
+
+/* ── GRID ── */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 640px) { .g2, .g3 { grid-template-columns: 1fr; } }
+
+/* ── CARD ── */
+.card { background: white; border: 1px solid var(--b); border-radius: 18px; padding: 22px 24px; box-shadow: 0 2px 12px rgba(9,11,28,.06); }
+
+/* ── CAPTION ── */
+.caption { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ink4); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.caption::after { content: ''; flex: 1; height: 1px; background: var(--b); }
+
+/* ── NOTE ── */
+.note { border-radius: 10px; padding: 12px 16px; font-size: 12px; font-weight: 500; display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; line-height: 1.6; border: 1px solid; }
+.note-icon { font-size: 15px; flex-shrink: 0; }
+.n-warn { background: var(--warn-s); border-color: rgba(154,85,0,.15); color: var(--warn); }
+.n-info { background: var(--info-s); border-color: rgba(24,64,186,.12); color: var(--info); }
+.n-ok   { background: var(--ok-s);   border-color: rgba(10,112,80,.15);  color: var(--ok); }
+
+/* ══════════════════════════
+   PALETA
+══════════════════════════ */
+.pal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
+.swatch { border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(9,11,28,.08); }
+.sw-color { height: 56px; }
+.sw-info { background: white; padding: 8px 10px; }
+.sw-name { font-size: 11px; font-weight: 700; color: var(--ink2); margin-bottom: 2px; }
+.sw-hex  { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink4); }
+.sw-use  { font-size: 10px; color: var(--ink3); margin-top: 2px; }
+
+/* ══════════════════════════
+   TIPOGRAFÍA
+══════════════════════════ */
+.type-table { border-collapse: collapse; width: 100%; }
+.type-table td { padding: 14px 0; border-bottom: 1px solid var(--b); vertical-align: middle; }
+.type-table tr:last-child td { border-bottom: none; }
+.td-sample { padding-right: 20px; }
+.td-rule { font-size: 11px; color: var(--ink3); line-height: 1.6; min-width: 240px; }
+.td-rule strong { color: var(--ink2); display: block; margin-bottom: 2px; }
+
+/* ══════════════════════════
+   ESPACIADO
+══════════════════════════ */
+.sp-row { display: flex; align-items: center; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--b); }
+.sp-row:last-child { border-bottom: none; }
+.sp-bar { background: var(--admin); border-radius: 4px; height: 14px; opacity: .7; flex-shrink: 0; }
+.sp-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink2); min-width: 90px; }
+.sp-use  { font-size: 11px; color: var(--ink3); }
+
+/* ══════════════════════════
+   RADIOS
+══════════════════════════ */
+.rad-row { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; }
+.rad-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.rad-box { background: var(--admin-s); border: 2px solid var(--admin); width: 54px; height: 54px; }
+.rad-lbl { font-size: 10px; font-weight: 700; color: var(--ink3); text-align: center; font-family: 'JetBrains Mono', monospace; }
+
+/* ══════════════════════════
+   SOMBRAS
+══════════════════════════ */
+.shd-row { display: flex; gap: 14px; flex-wrap: wrap; padding: 8px 0; }
+.shd-box { background: white; border-radius: 12px; padding: 14px 20px; font-size: 11px; font-weight: 700; color: var(--ink2); text-align: center; min-width: 110px; }
+
+/* ══════════════════════════
+   ICONOS
+══════════════════════════ */
+.icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
+.icon-cell { background: white; border: 1px solid var(--b); border-radius: 14px; padding: 14px 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.icon-box { width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center; }
+.icon-box svg { width: 22px; height: 22px; }
+.icon-lbl { font-size: 9px; font-weight: 700; color: var(--ink4); text-align: center; line-height: 1.4; }
+
+/* ══════════════════════════
+   HERO CARDS
+══════════════════════════ */
+.hero { border-radius: 22px; padding: 24px; position: relative; overflow: hidden; min-height: 148px; }
+.hero::after { content: ''; position: absolute; bottom: -50px; right: -30px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,.06); pointer-events: none; }
+.hero-a { background: linear-gradient(138deg, #1A2AD8, #3447E8 50%, #5B3AFF); }
+.hero-c { background: linear-gradient(138deg, #065C44, #0A7C5C 55%, #0AA88A); }
+.hero-s { background: linear-gradient(138deg, #8A2C00, #C44C0A 55%, #E86820); }
+.hero::before { content: ''; position: absolute; top: 0; left: -80%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.09), transparent); animation: sweep 4s ease infinite; pointer-events: none; }
+.hero-lbl { font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,.55); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.hero-lbl::before { content: ''; width: 12px; height: 1px; background: rgba(255,255,255,.3); }
+.hero-amt { font-family: 'Fraunces', serif; font-size: 40px; font-weight: 600; color: white; line-height: 1; letter-spacing: -1.5px; margin-bottom: 14px; position: relative; z-index: 1; }
+.hero-amt sup { font-size: 18px; font-weight: 300; opacity: .75; vertical-align: super; }
+.hero-tags { display: flex; gap: 6px; flex-wrap: wrap; position: relative; z-index: 1; }
+.ht { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2); border-radius: 99px; padding: 4px 10px; font-size: 10px; font-weight: 600; color: rgba(255,255,255,.9); }
+
+/* ══════════════════════════
+   STAT CARDS
+══════════════════════════ */
+.stat { background: white; border: 1px solid var(--b); border-radius: 16px; padding: 14px; box-shadow: 0 2px 10px rgba(9,11,28,.06); position: relative; overflow: hidden; }
+.stat::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2.5px; border-radius: 16px 16px 0 0; }
+.stat.sa::before { background: linear-gradient(90deg, var(--admin), var(--admin-l)); }
+.stat.sc::before { background: linear-gradient(90deg, var(--cob), var(--cob-l)); }
+.stat.ss::before { background: linear-gradient(90deg, var(--ase), var(--ase-l)); }
+.stat.se::before { background: linear-gradient(90deg, var(--err), #E87A7C); }
+.stat.sw::before { background: linear-gradient(90deg, var(--warn), #E8A030); }
+.stat.sg::before { background: linear-gradient(90deg, #B08000, #E8C000); }
+.stat-ico { width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-bottom: 9px; }
+.stat-ico svg { width: 20px; height: 20px; }
+.stat-lbl { font-size: 9px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--ink4); margin-bottom: 3px; }
+.stat-val { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; color: var(--ink); letter-spacing: -.5px; }
+.stat-tr  { font-size: 10px; font-weight: 600; margin-top: 4px; }
+.up { color: var(--ok); } .dn { color: var(--err); }
+
+/* ══════════════════════════
+   PROGRESS BAR
+══════════════════════════ */
+.prog { background: white; border: 1px solid var(--b); border-radius: 16px; padding: 16px; box-shadow: 0 2px 10px rgba(9,11,28,.06); }
+.prog-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.prog-lbl { font-size: 11px; font-weight: 700; color: var(--ink); }
+.prog-pct { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; }
+.prog-track { height: 8px; background: var(--s3); border-radius: 99px; overflow: hidden; margin-bottom: 5px; }
+.prog-fill { height: 100%; border-radius: 99px; }
+.pf-a { background: linear-gradient(90deg, var(--admin), var(--admin-l)); }
+.pf-c { background: linear-gradient(90deg, var(--cob), var(--cob-l)); }
+.pf-s { background: linear-gradient(90deg, var(--ase), var(--ase-l)); }
+.prog-sub { font-size: 10px; color: var(--ink4); }
+
+/* ══════════════════════════
+   BADGES
+══════════════════════════ */
+.badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 99px; letter-spacing: .3px; }
+.b-ok   { background: var(--ok-s);   color: var(--ok);   }
+.b-pd   { background: var(--warn-s); color: var(--warn); }
+.b-lt   { background: var(--err-s);  color: var(--err);  }
+.b-nw   { background: var(--info-s); color: var(--info); }
+.b-ase  { background: var(--ase-s);  color: var(--ase);  }
+.b-adm  { background: var(--admin);  color: white; }
+.b-neu  { background: var(--s3);     color: var(--ink3); }
+
+/* ══════════════════════════
+   BOTONES
+══════════════════════════ */
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: transform .15s; }
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: scale(.97); }
+.btn-a { background: linear-gradient(135deg, var(--admin), var(--admin-l)); color: white; box-shadow: 0 4px 14px rgba(52,71,232,.32); }
+.btn-c { background: linear-gradient(135deg, var(--cob), var(--cob-l));     color: white; box-shadow: 0 4px 14px rgba(10,124,92,.32); }
+.btn-s { background: linear-gradient(135deg, var(--ase), var(--ase-l));     color: white; box-shadow: 0 4px 14px rgba(196,76,10,.32); }
+.btn-ok  { background: linear-gradient(135deg, var(--ok), #1BB880);         color: white; box-shadow: 0 4px 14px rgba(10,112,80,.32); }
+.btn-err { background: linear-gradient(135deg, var(--err), #E85060);        color: white; box-shadow: 0 4px 14px rgba(184,36,40,.32); }
+.btn-sec { background: var(--s1); border: 1.5px solid var(--b); color: var(--ink2); box-shadow: none; }
+
+/* ══════════════════════════
+   INPUTS
+══════════════════════════ */
+.input { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; border: 1.5px solid; }
+.i-def { background: var(--s1); border-color: var(--b); color: var(--ink4); }
+.i-act { background: white; border-color: var(--admin); color: var(--ink); box-shadow: 0 0 0 3px rgba(52,71,232,.08); }
+.i-ok  { background: var(--ok-s); border-color: rgba(10,112,80,.2); color: var(--ok); }
+.i-err { background: var(--err-s); border-color: rgba(184,36,40,.18); color: var(--err); }
+.i-tag { font-size: 9px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+
+/* ══════════════════════════
+   ROLE CHIP
+══════════════════════════ */
+.rc { display: inline-flex; align-items: center; gap: 9px; padding: 9px 20px; border-radius: 99px; font-size: 12px; font-weight: 700; color: white; }
+.rc-a { background: linear-gradient(135deg, var(--admin), var(--admin-l)); box-shadow: 0 3px 10px rgba(52,71,232,.3); }
+.rc-c { background: linear-gradient(135deg, var(--cob), var(--cob-l));     box-shadow: 0 3px 10px rgba(10,124,92,.3); }
+.rc-s { background: linear-gradient(135deg, var(--ase), var(--ase-l));     box-shadow: 0 3px 10px rgba(196,76,10,.3); }
+
+/* ══════════════════════════
+   LIST CARD
+══════════════════════════ */
+.lcard { background: white; border: 1px solid var(--b); border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 4px rgba(9,11,28,.05); position: relative; overflow: hidden; }
+.lcard + .lcard { margin-top: 8px; }
+.lc-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.lc-ico { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lc-ico svg { width: 22px; height: 22px; }
+.lc-info { flex: 1; min-width: 0; }
+.lc-name { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.lc-sub  { font-size: 10px; color: var(--ink4); }
+.lc-meta { text-align: right; flex-shrink: 0; }
+.lc-amt  { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+
+/* ══════════════════════════
+   MODAL
+══════════════════════════ */
+.modal { background: white; border: 1px solid var(--b); border-radius: 24px; overflow: hidden; box-shadow: 0 14px 44px rgba(9,11,28,.11); }
+.modal-bar { height: 3px; }
+.modal-top { padding: 20px 22px; border-bottom: 1px solid var(--b); }
+.modal-ico-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.modal-ico { width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.modal-ico svg { width: 26px; height: 26px; }
+.modal-title { font-size: 18px; font-weight: 700; color: var(--ink); letter-spacing: -.3px; }
+.modal-sub { font-size: 11px; color: var(--ink3); margin-top: 2px; }
+.modal-body { padding: 14px 22px; }
+.modal-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--b); }
+.modal-row:last-child { border: none; }
+.mr-k { font-size: 11px; color: var(--ink3); display: flex; align-items: center; gap: 7px; }
+.mr-k svg { width: 13px; height: 13px; opacity: .6; }
+.mr-v { font-size: 12px; font-weight: 700; color: var(--ink); font-family: 'JetBrains Mono', monospace; }
+.mr-v.big { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; letter-spacing: -.5px; }
+.modal-foot { padding: 14px 22px 22px; display: flex; gap: 10px; }
+.modal-foot .btn { flex: 1; justify-content: center; font-size: 12px; padding: 12px; }
+
+/* ══════════════════════════
+   BOTTOM NAV
+══════════════════════════ */
+.bnav { display: flex; align-items: center; background: rgba(255,255,255,.93); border-top: 1px solid var(--b); padding: 8px 8px 18px; gap: 2px; border-radius: 0 0 24px 24px; }
+.bn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 4px; border-radius: 11px; }
+.bn-ico { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+.bn-ico svg { width: 20px; height: 20px; }
+.bn-lbl { font-size: 9px; font-weight: 600; color: var(--ink4); }
+.bn.on-a { background: var(--admin-s); } .bn.on-a .bn-lbl { color: var(--admin); }
+.bn.on-c { background: var(--cob-s);   } .bn.on-c .bn-lbl { color: var(--cob);   }
+.bn.on-s { background: var(--ase-s);   } .bn.on-s .bn-lbl { color: var(--ase);   }
+.fab { width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-top: -14px; flex-shrink: 0; }
+.fab svg { width: 22px; height: 22px; }
+.fab-a { background: linear-gradient(135deg, var(--admin), var(--admin-l)); box-shadow: 0 4px 14px rgba(52,71,232,.4); }
+.fab-c { background: linear-gradient(135deg, var(--cob), var(--cob-l));     box-shadow: 0 4px 14px rgba(10,124,92,.4); }
+.fab-s { background: linear-gradient(135deg, var(--ase), var(--ase-l));     box-shadow: 0 4px 14px rgba(196,76,10,.4); }
+
+/* ══════════════════════════
+   AUDIT ROW
+══════════════════════════ */
+.aud { background: white; border: 1px solid var(--b); border-radius: 13px; padding: 10px 13px; display: flex; align-items: center; gap: 10px; }
+.aud + .aud { margin-top: 7px; }
+.aud-ico { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.aud-ico svg { width: 16px; height: 16px; }
+.aud-b { flex: 1; }
+.aud-a { font-size: 11px; font-weight: 700; color: var(--ink); margin-bottom: 1px; }
+.aud-w { font-size: 10px; color: var(--ink4); }
+.aud-t { font-size: 9px; font-family: 'JetBrains Mono', monospace; color: var(--ink4); }
+
+/* ══════════════════════════
+   TIMELINE
+══════════════════════════ */
+.tline { display: flex; flex-direction: column; }
+.ti { display: flex; gap: 11px; align-items: flex-start; padding-bottom: 12px; position: relative; }
+.ti:not(:last-child)::after { content: ''; position: absolute; left: 14px; top: 30px; bottom: 0; width: 1px; background: linear-gradient(to bottom, var(--b), transparent); }
+.ti-dot { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 1; }
+.ti-dot svg { width: 15px; height: 15px; }
+.ti-b { flex: 1; padding-top: 3px; }
+.ti-n { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.ti-d { font-size: 10px; color: var(--ink4); }
+.ti-t { font-size: 9px; font-family: 'JetBrains Mono', monospace; color: var(--ink4); padding-top: 4px; white-space: nowrap; }
+
+@keyframes sweep { 0% { left: -80%; } 100% { left: 130%; } }
+
+/* ══════════════════════════
+   VISUAL RULE TABLE
+══════════════════════════ */
+.rule-table { width: 100%; border-collapse: collapse; }
+.rule-table th { text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ink4); padding: 10px 14px; background: var(--s2); border-bottom: 1px solid var(--b); }
+.rule-table td { padding: 11px 14px; font-size: 12px; color: var(--ink2); border-bottom: 1px solid var(--b); line-height: 1.5; vertical-align: top; }
+.rule-table tr:last-child td { border: none; }
+.rule-table tr:hover td { background: var(--s1); }
+.rule-table td:first-child { font-weight: 700; color: var(--ink); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-eyebrow">LoanOS · Design System · Guía Visual</div>
+  <div class="cover-title">Cómo debe <em>verse</em></div>
+  <div class="cover-sub">Reglas visuales puras para construir cada componente de la app de préstamos.</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     01 · COLOR
+══════════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">01</div>
+  <div class="sec-title">Color</div>
+
+  <div class="caption">Un color por rol — nunca mezclar</div>
+  <div class="pal-grid">
+    <div class="swatch"><div class="sw-color" style="background:linear-gradient(135deg,#3447E8,#6978FF)"></div><div class="sw-info"><div class="sw-name">Admin</div><div class="sw-hex">#3447E8</div><div class="sw-use">Todo lo del Admin</div></div></div>
+    <div class="swatch"><div class="sw-color" style="background:linear-gradient(135deg,#0A7C5C,#1DB888)"></div><div class="sw-info"><div class="sw-name">Cobrador</div><div class="sw-hex">#0A7C5C</div><div class="sw-use">Todo lo del Cobrador</div></div></div>
+    <div class="swatch"><div class="sw-color" style="background:linear-gradient(135deg,#C44C0A,#F06820)"></div><div class="sw-info"><div class="sw-name">Asesor</div><div class="sw-hex">#C44C0A</div><div class="sw-use">Todo lo del Asesor</div></div></div>
+    <div class="swatch"><div class="sw-color" style="background:#0A7050"></div><div class="sw-info"><div class="sw-name">Éxito</div><div class="sw-hex">#0A7050</div><div class="sw-use">Al día, OK, confirmado</div></div></div>
+    <div class="swatch"><div class="sw-color" style="background:#9A5500"></div><div class="sw-info"><div class="sw-name">Aviso</div><div class="sw-hex">#9A5500</div><div class="sw-use">Por vencer, atención</div></div></div>
+    <div class="swatch"><div class="sw-color" style="background:#B82428"></div><div class="sw-info"><div class="sw-name">Error</div><div class="sw-hex">#B82428</div><div class="sw-use">Mora, error, rechazado</div></div></div>
+    <div class="swatch"><div class="sw-color" style="background:#1840BA"></div><div class="sw-info"><div class="sw-name">Info</div><div class="sw-hex">#1840BA</div><div class="sw-use">Pendiente, neutral</div></div></div>
+    <div class="swatch"><div class="sw-color" style="background:#090B1C"></div><div class="sw-info"><div class="sw-name">Texto</div><div class="sw-hex">#090B1C</div><div class="sw-use">Texto principal</div></div></div>
+    <div class="swatch"><div class="sw-color" style="background:#525880"></div><div class="sw-info"><div class="sw-name">Texto 2</div><div class="sw-hex">#525880</div><div class="sw-use">Subtextos, labels</div></div></div>
+    <div class="swatch"><div class="sw-color" style="background:#8E93BA"></div><div class="sw-info"><div class="sw-name">Texto 3</div><div class="sw-hex">#8E93BA</div><div class="sw-use">Placeholders</div></div></div>
+    <div class="swatch"><div class="sw-color" style="background:#F2F1F9;border:1px solid #E0DFF4"></div><div class="sw-info"><div class="sw-name">Fondo</div><div class="sw-hex">#F2F1F9</div><div class="sw-use">Fondo de pantalla</div></div></div>
+    <div class="swatch"><div class="sw-color" style="background:#FFFFFF;border:1px solid #E0DFF4"></div><div class="sw-info"><div class="sw-name">Card</div><div class="sw-hex">#FFFFFF</div><div class="sw-use">Superficie de cards</div></div></div>
+  </div>
+
+  <div class="note n-info" style="margin-top:16px">
+    <span class="note-icon">ℹ️</span>
+    <span>El color de rol impregna <strong>todo</strong> en esa pantalla: barra de progreso, FAB, tabs activos, bordes de inputs enfocados, gradiente del hero, texto de porcentajes. Nunca usar azul Admin en la pantalla del Cobrador.</span>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- ══════════════════════════════════
+     02 · TIPOGRAFÍA
+══════════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">02</div>
+  <div class="sec-title">Tipografía</div>
+
+  <div class="card">
+    <table class="type-table">
+      <tr>
+        <td class="td-sample"><span style="font-family:'Fraunces',serif;font-size:42px;font-weight:600;letter-spacing:-2px;line-height:1;color:var(--ink)">$847,320</span></td>
+        <td class="td-rule"><strong>Monto hero</strong>Fraunces Serif · 600 · 42px · Solo en la card grande superior de cada pantalla. Siempre blanco sobre gradiente de color.</td>
+      </tr>
+      <tr>
+        <td class="td-sample"><span style="font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-.5px">Cartera Total</span></td>
+        <td class="td-rule"><strong>Fraunces mediano</strong>Fraunces · 600 · 22px · Montos en modales, valores destacados en cards. Color del rol activo.</td>
+      </tr>
+      <tr>
+        <td class="td-sample"><span style="font-size:16px;font-weight:800;color:var(--ink)">Dashboard</span></td>
+        <td class="td-rule"><strong>Heading principal</strong>Plus Jakarta Sans · 800 · 16–18px · Títulos de pantalla, nombres en top nav.</td>
+      </tr>
+      <tr>
+        <td class="td-sample"><span style="font-size:13px;font-weight:700;color:var(--ink2)">Laura Sánchez</span></td>
+        <td class="td-rule"><strong>Nombre / Card title</strong>Plus Jakarta Sans · 700 · 13px · Nombres de clientes, títulos de lista.</td>
+      </tr>
+      <tr>
+        <td class="td-sample"><span style="font-size:12px;font-weight:500;color:var(--ink3)">Crédito #1091 · Vigente</span></td>
+        <td class="td-rule"><strong>Subtexto</strong>Plus Jakarta Sans · 500 · 12px · Descripciones secundarias, metadatos.</td>
+      </tr>
+      <tr>
+        <td class="td-sample"><span style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink4)">MONTO CUOTA</span></td>
+        <td class="td-rule"><strong>Label de campo</strong>Plus Jakarta Sans · 700 · 9px · MAYÚSCULAS · Siempre encima de un input o sección.</td>
+      </tr>
+      <tr>
+        <td class="td-sample"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;color:var(--admin)">$14,250.00</span></td>
+        <td class="td-rule"><strong>Montos y códigos</strong>JetBrains Mono · 500 · 14px · Solo para cifras en listas, IDs, timestamps. Color del rol activo.</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- ══════════════════════════════════
+     03 · ESPACIADO Y FORMA
+══════════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">03</div>
+  <div class="sec-title">Espaciado y <em>Forma</em></div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="caption">Espaciado entre elementos</div>
+      <div class="sp-row"><span class="sp-name">4 dp</span><div class="sp-bar" style="width:16px"></div><span class="sp-use">Dentro de un chip o badge</span></div>
+      <div class="sp-row"><span class="sp-name">8 dp</span><div class="sp-bar" style="width:32px"></div><span class="sp-use">Espacio entre icono y texto</span></div>
+      <div class="sp-row"><span class="sp-name">12 dp</span><div class="sp-bar" style="width:48px"></div><span class="sp-use">Gap entre cards en lista</span></div>
+      <div class="sp-row"><span class="sp-name">16 dp</span><div class="sp-bar" style="width:64px"></div><span class="sp-use">Padding interno de card</span></div>
+      <div class="sp-row"><span class="sp-name">20 dp</span><div class="sp-bar" style="width:80px"></div><span class="sp-use">Padding de modal</span></div>
+      <div class="sp-row"><span class="sp-name">24 dp</span><div class="sp-bar" style="width:96px"></div><span class="sp-use">Padding del hero card</span></div>
+      <div class="sp-row"><span class="sp-name">16–20 dp</span><div class="sp-bar" style="width:76px"></div><span class="sp-use">Márgenes laterales de pantalla</span></div>
+    </div>
+
+    <div class="card">
+      <div class="caption">Redondeo de esquinas</div>
+      <div class="rad-row">
+        <div class="rad-item"><div class="rad-box" style="border-radius:6px"></div><div class="rad-lbl">6dp<br>Badges</div></div>
+        <div class="rad-item"><div class="rad-box" style="border-radius:10px"></div><div class="rad-lbl">10dp<br>Inputs</div></div>
+        <div class="rad-item"><div class="rad-box" style="border-radius:14px"></div><div class="rad-lbl">14dp<br>Cards</div></div>
+        <div class="rad-item"><div class="rad-box" style="border-radius:18px"></div><div class="rad-lbl">18dp<br>Stats</div></div>
+        <div class="rad-item"><div class="rad-box" style="border-radius:22px"></div><div class="rad-lbl">22dp<br>Hero</div></div>
+        <div class="rad-item"><div class="rad-box" style="border-radius:99px;height:36px;width:72px"></div><div class="rad-lbl">Completo<br>Chips/Pills</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="caption">Sombras — cuándo usar cada nivel</div>
+    <div class="shd-row">
+      <div class="shd-box" style="box-shadow:0 1px 3px rgba(9,11,28,.05)">Mínima<br><span style="font-size:10px;color:var(--ink4);font-weight:400">Chips, badges</span></div>
+      <div class="shd-box" style="box-shadow:0 2px 10px rgba(9,11,28,.07)">Suave<br><span style="font-size:10px;color:var(--ink4);font-weight:400">Cards en lista</span></div>
+      <div class="shd-box" style="box-shadow:0 6px 22px rgba(9,11,28,.09)">Media<br><span style="font-size:10px;color:var(--ink4);font-weight:400">Formularios</span></div>
+      <div class="shd-box" style="box-shadow:0 14px 44px rgba(9,11,28,.11)">Alta<br><span style="font-size:10px;color:var(--ink4);font-weight:400">Modales</span></div>
+      <div class="shd-box" style="box-shadow:0 28px 72px rgba(9,11,28,.13)">Máxima<br><span style="font-size:10px;color:var(--ink4);font-weight:400">Teléfonos</span></div>
+    </div>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- ══════════════════════════════════
+     04 · ICONOS
+══════════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">04</div>
+  <div class="sec-title">Iconos <em>Flat</em></div>
+
+  <div class="note n-info" style="margin-bottom:16px">
+    <span class="note-icon">ℹ️</span>
+    <span><strong>Estilo Fluent two-tone:</strong> relleno suave (opacity 20–25%) + contorno fino (stroke 1.7px). Tamaño 24×24 dp. Siempre dentro de una caja redondeada de 40–44 dp con fondo surface del color correspondiente. El ícono hereda el color del contexto: rol o semántico.</span>
+  </div>
+
+  <div class="icon-grid">
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--admin-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--admin)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 19h18v2H3z" fill="var(--admin)" opacity=".25" stroke="none"/><path d="M4 19l2-10 4 5L12 4l3 10 4-5 2 10H4z"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">crown · Admin</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--cob-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--cob)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="5" cy="18" r="3" fill="var(--cob)" opacity=".25"/><circle cx="19" cy="6" r="3" fill="var(--cob)" opacity=".25"/>
+          <path d="M5 15V12a7 7 0 0 1 7-7h2" opacity=".5"/><path d="M19 9v3a7 7 0 0 1-7 7H9"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">route · Cobrador</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:#FBF7E3">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#A07800" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 18l-6.2 3.1L7 14.2 2 9.3l6.9-1z" fill="#A07800" opacity=".2"/>
+          <path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 18l-6.2 3.1L7 14.2 2 9.3l6.9-1z"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">star · Asesor</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--cob-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--cob)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2" fill="var(--cob)" opacity=".2"/><rect x="2" y="7" width="20" height="14" rx="2"/>
+          <path d="M2 11h20"/><rect x="15" y="13.5" width="5" height="4" rx="1.5" fill="var(--cob)"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">wallet · Cobro</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--ase-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--ase)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4a2 2 0 0 1 2-2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4z" fill="var(--ase)" opacity=".18"/>
+          <path d="M14 2v6h6"/><path d="M4 4a2 2 0 0 1 2-2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4z"/>
+          <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">file · Solicitud</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--ok-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" fill="var(--ok)" opacity=".18"/><circle cx="12" cy="12" r="10"/>
+          <polyline points="7,12 10.5,15.5 17,9"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">check · Al día</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--warn-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.3 3.3 1.6 18A2 2 0 0 0 3.4 21h17.2a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z" fill="var(--warn)" opacity=".18"/>
+          <path d="M10.3 3.3 1.6 18A2 2 0 0 0 3.4 21h17.2a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13.5"/><circle cx="12" cy="17" r="1.2" fill="var(--warn)"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">alert · Mora</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--admin-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--admin)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 4 5v6c0 5.5 3.5 10.7 8 12 4.5-1.3 8-6.5 8-12V5L12 2z" fill="var(--admin)" opacity=".18"/>
+          <path d="M12 2 4 5v6c0 5.5 3.5 10.7 8 12 4.5-1.3 8-6.5 8-12V5L12 2z"/>
+          <polyline points="9,12 11.5,14.5 16,10"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">shield · Seguridad</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--err-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--err)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="11" width="14" height="11" rx="2" fill="var(--err)" opacity=".18"/><rect x="5" y="11" width="14" height="11" rx="2"/>
+          <path d="M8 11V7a4 4 0 1 1 8 0v4"/><circle cx="12" cy="16" r="1.5" fill="var(--err)"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">lock · Auditoría</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:#FBF7E3">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#A07800" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 4h14v8a7 7 0 0 1-14 0V4z" fill="#A07800" opacity=".18"/><path d="M5 4h14v8a7 7 0 0 1-14 0V4z"/>
+          <path d="M8 21h8m-4 0v-3"/>
+          <path d="M5 7H3a2 2 0 0 0 0 4h2" opacity=".5"/><path d="M19 7h2a2 2 0 0 1 0 4h-2" opacity=".5"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">trophy · Ranking</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--s3)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 8a2 2 0 0 1 2-2h1l2-3h6l2 3h1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8z" fill="var(--ink3)" opacity=".15"/>
+          <path d="M2 8a2 2 0 0 1 2-2h1l2-3h6l2 3h1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8z"/>
+          <circle cx="12" cy="13" r="3.5"/><circle cx="12" cy="13" r="1.5" fill="var(--ink3)" opacity=".4"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">camera · Foto</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--info-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6.6 10.8a15.2 15.2 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.2c1.1.4 2.3.6 3.6.6a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A18 18 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.3.2 2.5.6 3.6a1 1 0 0 1-.2 1l-2.3 2.2z" fill="var(--info)" opacity=".18"/>
+          <path d="M6.6 10.8a15.2 15.2 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.2c1.1.4 2.3.6 3.6.6a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A18 18 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.3.2 2.5.6 3.6a1 1 0 0 1-.2 1l-2.3 2.2z"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">phone · Llamar</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--admin-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--admin)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12L12 3l9 9"/>
+          <path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9" fill="var(--admin)" opacity=".18"/>
+          <path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">home · Inicio</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--admin-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--admin)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4" fill="var(--admin)" opacity=".25"/><circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="var(--admin)" opacity=".12"/>
+          <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">user · Cliente</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--info-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="12" width="4" height="9" rx="1" fill="var(--info)" opacity=".3"/>
+          <rect x="10" y="7" width="4" height="14" rx="1" fill="var(--info)" opacity=".55"/>
+          <rect x="17" y="3" width="4" height="18" rx="1" fill="var(--info)"/>
+          <line x1="2" y1="21" x2="22" y2="21" stroke="var(--info)" opacity=".35"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">bar-chart · Reporte</span>
+    </div>
+    <div class="icon-cell">
+      <div class="icon-box" style="background:var(--cob-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--cob)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8.7 2 6 4.7 6 8c0 5.3 6 13 6 13s6-7.7 6-13c0-3.3-2.7-6-6-6z" fill="var(--cob)" opacity=".22"/>
+          <path d="M12 2C8.7 2 6 4.7 6 8c0 5.3 6 13 6 13s6-7.7 6-13c0-3.3-2.7-6-6-6z"/>
+          <circle cx="12" cy="8" r="2.5" fill="var(--cob)"/>
+        </svg>
+      </div>
+      <span class="icon-lbl">map-pin · Ruta</span>
+    </div>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- ══════════════════════════════════
+     05 · COMPONENTES
+══════════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">05</div>
+  <div class="sec-title">Componentes</div>
+
+  <!-- ROLE CHIPS -->
+  <div class="caption">Chips de rol — identifican quién está en la app</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
+    <span class="rc rc-a">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19l2-10 4 5L12 4l3 10 4-5 2 10H4z"/></svg>
+      Administrador
+    </span>
+    <span class="rc rc-c">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round"><circle cx="5" cy="18" r="3" fill="white" opacity=".4"/><path d="M19 9v3a7 7 0 0 1-7 7H9"/></svg>
+      Cobrador
+    </span>
+    <span class="rc rc-s">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 18l-6.2 3.1L7 14.2 2 9.3l6.9-1z"/></svg>
+      Asesor
+    </span>
+  </div>
+
+  <!-- HERO CARDS -->
+  <div class="caption">Hero cards — una por pantalla, siempre arriba</div>
+  <div class="g3" style="margin-bottom:24px">
+    <div class="hero hero-a">
+      <div class="hero-lbl">Cartera Total</div>
+      <div class="hero-amt"><sup>$</sup>847,320</div>
+      <div class="hero-tags"><span class="ht">+12.4%</span><span class="ht">142 créditos</span></div>
+    </div>
+    <div class="hero hero-c">
+      <div class="hero-lbl">Meta de Cobro</div>
+      <div class="hero-amt"><sup>$</sup>4,800</div>
+      <div class="hero-tags"><span class="ht">66.7% cobrado</span></div>
+    </div>
+    <div class="hero hero-s">
+      <div class="hero-lbl">Cartera Propia</div>
+      <div class="hero-amt"><sup>$</sup>98,450</div>
+      <div class="hero-tags"><span class="ht">34 clientes</span><span class="ht">#1</span></div>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="caption">Stat cards — van en grid de 2 columnas debajo del hero</div>
+  <div class="g2" style="margin-bottom:24px">
+    <div class="stat sa">
+      <div class="stat-ico" style="background:var(--admin-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--admin)" stroke-width="1.7"><rect x="2" y="7" width="20" height="14" rx="2" fill="var(--admin)" opacity=".2"/><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M2 11h20"/><rect x="15" y="13.5" width="5" height="4" rx="1.5" fill="var(--admin)"/></svg>
+      </div>
+      <div class="stat-lbl">Desembolsos hoy</div>
+      <div class="stat-val">$23,500</div>
+      <div class="stat-tr up">▲ +8 vs ayer</div>
+    </div>
+    <div class="stat sc">
+      <div class="stat-ico" style="background:var(--cob-s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--cob)" stroke-width="1.7"><circle cx="12" cy="12" r="10" fill="var(--cob)" opacity=".18"/><circle cx="12" cy="12" r="10"/><polyline points="7,12 10.5,15.5 17,9"/></svg>
+      </div>
+      <div class="stat-lbl">Cobros hoy</div>
+      <div class="stat-val">$18,200</div>
+      <div class="stat-tr up">▲ 94% meta</div>
+    </div>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="caption">Barra de progreso — solo en pantallas de Cobrador y Asesor</div>
+  <div class="g2" style="margin-bottom:24px">
+    <div class="prog">
+      <div class="prog-top"><span class="prog-lbl">Meta diaria</span><span class="prog-pct" style="color:var(--cob)">66.7%</span></div>
+      <div class="prog-track"><div class="prog-fill pf-c" style="width:66.7%"></div></div>
+      <div class="prog-sub">$3,200 de $4,800</div>
+    </div>
+    <div class="prog">
+      <div class="prog-top"><span class="prog-lbl">Meta mensual</span><span class="prog-pct" style="color:var(--ase)">78%</span></div>
+      <div class="prog-track"><div class="prog-fill pf-s" style="width:78%"></div></div>
+      <div class="prog-sub">$78,000 de $100,000</div>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="caption">Badges de estado de crédito</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px">
+    <span class="badge b-ok">Al día</span>
+    <span class="badge b-pd">Por vencer</span>
+    <span class="badge b-lt">En mora</span>
+    <span class="badge b-nw">Pendiente</span>
+    <span class="badge b-ase">Por renovar</span>
+    <span class="badge b-adm">VIP</span>
+    <span class="badge b-neu">Inactivo</span>
+  </div>
+
+  <!-- BOTONES -->
+  <div class="caption">Botones</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+    <button class="btn btn-a">Aprobar</button>
+    <button class="btn btn-c">Registrar cobro</button>
+    <button class="btn btn-s">Continuar</button>
+    <button class="btn btn-ok">✓ Confirmar</button>
+    <button class="btn btn-err">✕ Rechazar</button>
+    <button class="btn btn-sec">Cancelar</button>
+  </div>
+  <div class="note n-info" style="margin-bottom:24px">
+    <span class="note-icon">ℹ️</span>
+    <span>Al confirmar una acción crítica: el botón cambia a verde, aparece ícono de check con animación ScaleIn, se activa feedback háptico y cae confetti. La animación dura 2.5 segundos.</span>
+  </div>
+
+  <!-- INPUTS -->
+  <div class="caption">Inputs — 4 estados</div>
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:380px;margin-bottom:24px">
+    <div class="input i-def"><span>Nombre del cliente</span><span class="i-tag" style="color:var(--ink5)">Vacío</span></div>
+    <div class="input i-act"><span style="font-weight:700">Laura Sánchez</span><span class="i-tag" style="color:var(--admin)">Activo</span></div>
+    <div class="input i-ok"><span>Verificado</span><span class="i-tag" style="color:var(--ok)">Válido ✓</span></div>
+    <div class="input i-err"><span>Monto excede límite</span><span class="i-tag" style="color:var(--err)">Error</span></div>
+  </div>
+
+  <!-- LIST CARDS -->
+  <div class="caption">Cards de lista — clientes, créditos</div>
+  <div style="max-width:400px;margin-bottom:24px">
+    <div class="lcard">
+      <div class="lc-bar" style="background:var(--cob)"></div>
+      <div class="lc-ico" style="background:var(--cob-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--cob)" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4" fill="var(--cob)" opacity=".25"/><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="var(--cob)" opacity=".12"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+      <div class="lc-info"><div class="lc-name">Laura Sánchez</div><div class="lc-sub">Cr. #1142 · Vigente</div></div>
+      <div class="lc-meta"><div class="lc-amt">$8,000</div><span class="badge b-ok">Al día</span></div>
+    </div>
+    <div class="lcard">
+      <div class="lc-bar" style="background:var(--warn)"></div>
+      <div class="lc-ico" style="background:var(--warn-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4" fill="var(--warn)" opacity=".25"/><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="var(--warn)" opacity=".12"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+      <div class="lc-info"><div class="lc-name">Pedro Linares</div><div class="lc-sub">Cr. #1088 · Vigente</div></div>
+      <div class="lc-meta"><div class="lc-amt">$5,500</div><span class="badge b-pd">Por vencer</span></div>
+    </div>
+    <div class="lcard">
+      <div class="lc-bar" style="background:var(--err)"></div>
+      <div class="lc-ico" style="background:var(--err-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--err)" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4" fill="var(--err)" opacity=".25"/><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="var(--err)" opacity=".12"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+      <div class="lc-info"><div class="lc-name">Sofía Reyes</div><div class="lc-sub">Cr. #1071 · En mora</div></div>
+      <div class="lc-meta"><div class="lc-amt">$3,200</div><span class="badge b-lt">Mora</span></div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="caption">Timeline de ruta — solo en Cobrador</div>
+  <div class="card" style="max-width:400px;margin-bottom:24px">
+    <div class="tline">
+      <div class="ti">
+        <div class="ti-dot" style="background:var(--ok-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="1.7" width="15" height="15"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="ti-b"><div class="ti-n">Juan Rodríguez</div><div class="ti-d">Cr. #1042 · $650 · Cobrado</div></div>
+        <div class="ti-t">08:15</div>
+      </div>
+      <div class="ti">
+        <div class="ti-dot" style="background:var(--cob);box-shadow:0 2px 8px rgba(10,124,92,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" width="15" height="15"><path d="M12 2C8.7 2 6 4.7 6 8c0 5.3 6 13 6 13s6-7.7 6-13c0-3.3-2.7-6-6-6z"/><circle cx="12" cy="8" r="2.5" fill="white"/></svg></div>
+        <div class="ti-b"><div class="ti-n" style="color:var(--cob)">Carlos Vega · Ahora</div><div class="ti-d">Cr. #1091 · $750 · En camino</div></div>
+        <div class="ti-t" style="color:var(--cob);font-weight:700">10:30</div>
+      </div>
+      <div class="ti">
+        <div class="ti-dot" style="background:var(--s3)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="1.7" width="15" height="15"><circle cx="12" cy="12" r="9" fill="var(--ink4)" opacity=".15"/><polyline points="12,7 12,12 15.5,14"/></svg></div>
+        <div class="ti-b"><div class="ti-n">Ana Torres</div><div class="ti-d">Cr. #1103 · $550 · Pendiente</div></div>
+        <div class="ti-t">11:00</div>
+      </div>
+      <div class="ti">
+        <div class="ti-dot" style="background:var(--err-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--err)" stroke-width="1.7" width="15" height="15"><path d="M10.3 3.3 1.6 18A2 2 0 0 0 3.4 21h17.2a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div>
+        <div class="ti-b"><div class="ti-n" style="color:var(--err)">Pedro Limas · Mora</div><div class="ti-d">Cr. #1055 · $900 · 4 días</div></div>
+        <div class="ti-t">12:00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIT -->
+  <div class="caption">Log de auditoría — solo en Admin</div>
+  <div style="max-width:440px;margin-bottom:24px">
+    <div class="aud"><div class="aud-ico" style="background:var(--ok-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="var(--ok)" opacity=".18"/><polyline points="7,12 10.5,15.5 17,9"/></svg></div><div class="aud-b"><div class="aud-a">Desembolso aprobado · $5,000</div><div class="aud-w">Asesor: María L. · Cliente: J. Rodríguez</div></div><div class="aud-t">09:14</div></div>
+    <div class="aud"><div class="aud-ico" style="background:var(--warn-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="1.7" stroke-linecap="round"><path d="M10.3 3.3 1.6 18A2 2 0 0 0 3.4 21h17.2a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div><div class="aud-b"><div class="aud-a">Crédito marcado en mora · #1055</div><div class="aud-w">Cobrador: A. García · 3 días vencido</div></div><div class="aud-t">08:52</div></div>
+    <div class="aud"><div class="aud-ico" style="background:var(--admin-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--admin)" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4" fill="var(--admin)" opacity=".25"/><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><div class="aud-b"><div class="aud-a">Nuevo asesor registrado</div><div class="aud-w">Admin: Carlos M.</div></div><div class="aud-t">08:30</div></div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="caption">Modal de confirmación — acción crítica</div>
+  <div class="modal" style="max-width:360px;margin-bottom:24px">
+    <div class="modal-bar" style="background:linear-gradient(90deg,var(--cob),var(--cob-l))"></div>
+    <div class="modal-top">
+      <div class="modal-ico-row">
+        <div class="modal-ico" style="background:var(--cob-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--cob)" stroke-width="1.7"><rect x="2" y="7" width="20" height="14" rx="2" fill="var(--cob)" opacity=".2"/><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M2 11h20"/><rect x="15" y="13.5" width="5" height="4" rx="1.5" fill="var(--cob)"/></svg></div>
+        <div><div class="modal-title">Registrar Cobro</div><div class="modal-sub">Cobrador · GPS activo</div></div>
+      </div>
+      <div class="note n-warn" style="margin-top:0;font-size:11px">
+        <span class="note-icon" style="font-size:13px">⚠️</span>
+        <span>Esta acción queda registrada en auditoría</span>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-row"><span class="mr-k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="13" height="13"><circle cx="12" cy="8" r="4" fill="currentColor" opacity=".25"/><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>Cliente</span><span class="mr-v">Carlos Vega</span></div>
+      <div class="modal-row"><span class="mr-k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="13" height="13"><path d="M4 4a2 2 0 0 1 2-2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4z"/><path d="M14 2v6h6"/></svg>Crédito</span><span class="mr-v">#1091</span></div>
+      <div class="modal-row"><span class="mr-k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="13" height="13"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15.5,14"/></svg>Cuota</span><span class="mr-v">7 / 12</span></div>
+      <div class="modal-row"><span class="mr-k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="13" height="13"><circle cx="12" cy="12" r="10" opacity=".18" fill="currentColor"/><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 8.5a3 3 0 0 0-6 0c0 1.8 1 2.7 3 3s3 1.2 3 3a3 3 0 0 1-6 0"/></svg>Monto</span><span class="mr-v big" style="color:var(--cob)">$750.00</span></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-sec">Cancelar</button>
+      <button class="btn btn-c">✓ Confirmar Cobro</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="caption">Barra de navegación inferior — por rol</div>
+  <div class="g3" style="margin-bottom:0">
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--admin);margin-bottom:8px;letter-spacing:.5px">ADMIN</div>
+      <div class="bnav">
+        <div class="bn on-a"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--admin)" stroke-width="1.7"><path d="M3 12L12 3l9 9"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9" fill="var(--admin)" opacity=".18"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9"/></svg></div><div class="bn-lbl">Inicio</div></div>
+        <div class="bn"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="1.7"><rect x="3" y="12" width="4" height="9" rx="1" fill="var(--ink4)" opacity=".3"/><rect x="10" y="7" width="4" height="14" rx="1" fill="var(--ink4)" opacity=".5"/><rect x="17" y="3" width="4" height="18" rx="1" fill="var(--ink4)"/></svg></div><div class="bn-lbl">Reportes</div></div>
+        <div style="display:flex;justify-content:center;padding-top:0"><div class="fab fab-a"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+        <div class="bn"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="1.7"><circle cx="12" cy="8" r="4" fill="var(--ink4)" opacity=".25"/><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><div class="bn-lbl">Usuarios</div></div>
+        <div class="bn"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><div class="bn-lbl">Config</div></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--cob);margin-bottom:8px;letter-spacing:.5px">COBRADOR</div>
+      <div class="bnav">
+        <div class="bn on-c"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--cob)" stroke-width="1.7"><path d="M3 12L12 3l9 9"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9" fill="var(--cob)" opacity=".18"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9"/></svg></div><div class="bn-lbl">Inicio</div></div>
+        <div class="bn"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="1.7"><path d="M12 2C8.7 2 6 4.7 6 8c0 5.3 6 13 6 13s6-7.7 6-13c0-3.3-2.7-6-6-6z" fill="var(--ink4)" opacity=".22"/><path d="M12 2C8.7 2 6 4.7 6 8c0 5.3 6 13 6 13s6-7.7 6-13c0-3.3-2.7-6-6-6z"/><circle cx="12" cy="8" r="2.5" fill="var(--ink4)"/></svg></div><div class="bn-lbl">Mapa</div></div>
+        <div style="display:flex;justify-content:center;padding-top:0"><div class="fab fab-c"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+        <div class="bn"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="1.7"><path d="M4 4a2 2 0 0 1 2-2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4z"/><path d="M14 2v6h6"/></svg></div><div class="bn-lbl">Ruta</div></div>
+        <div class="bn"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><div class="bn-lbl">Perfil</div></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--ase);margin-bottom:8px;letter-spacing:.5px">ASESOR</div>
+      <div class="bnav">
+        <div class="bn on-s"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ase)" stroke-width="1.7"><path d="M3 12L12 3l9 9"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9" fill="var(--ase)" opacity=".18"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9"/></svg></div><div class="bn-lbl">Inicio</div></div>
+        <div class="bn"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="1.7"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/><path d="M16 11a3 3 0 1 0 0-6" opacity=".5"/><path d="M22 20c0-3-1.7-5.5-4-6.5" opacity=".5"/></svg></div><div class="bn-lbl">Clientes</div></div>
+        <div style="display:flex;justify-content:center;padding-top:0"><div class="fab fab-s"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+        <div class="bn"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="1.7"><path d="M4 4a2 2 0 0 1 2-2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4z"/><path d="M14 2v6h6"/></svg></div><div class="bn-lbl">Solicitudes</div></div>
+        <div class="bn"><div class="bn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div><div class="bn-lbl">Perfil</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- ══════════════════════════════════
+     06 · REGLAS VISUALES
+══════════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">06</div>
+  <div class="sec-title">Reglas <em>Visuales</em></div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="rule-table">
+      <thead><tr><th>Elemento</th><th>Regla</th></tr></thead>
+      <tbody>
+        <tr><td>Fondo de pantalla</td><td>Siempre <span style="font-family:'JetBrains Mono',monospace;font-size:11px">#F2F1F9</span>, nunca blanco puro como fondo de página.</td></tr>
+        <tr><td>Cards</td><td>Blanco <span style="font-family:'JetBrains Mono',monospace;font-size:11px">#FFFFFF</span>, borde <span style="font-family:'JetBrains Mono',monospace;font-size:11px">#E0DFF4</span>, radio 14–18dp, sombra suave. Nunca sin borde ni sombra.</td></tr>
+        <tr><td>Hero card</td><td>Siempre la primera cosa visible en cada pantalla. Gradiente del color de rol. Nunca plano ni blanco.</td></tr>
+        <tr><td>Stat cards</td><td>Grid de 2 columnas. Línea de color de rol en la parte superior (2.5dp alto). Ícono con fondo surface del color semántico correspondiente.</td></tr>
+        <tr><td>Íconos</td><td>Siempre dentro de caja redondeada. Nunca sueltos sin contenedor. Fondo = surface del color de contexto. Ícono = color de contexto al 100%.</td></tr>
+        <tr><td>Badges de estado</td><td>Fondo suave del color semántico + texto oscuro del mismo color. Nunca badge blanco con texto de color.</td></tr>
+        <tr><td>Barra lateral en lista</td><td>3dp de ancho, color semántico del estado del crédito. Es el indicador rápido sin necesidad de leer el badge.</td></tr>
+        <tr><td>Gradientes en botones</td><td>Siempre del tono oscuro al claro del mismo color. Nunca mezclar colores de roles distintos en un mismo gradiente.</td></tr>
+        <tr><td>Progreso numérico</td><td>El porcentaje se muestra en fuente Mono, color del rol activo. La barra usa gradiente del rol.</td></tr>
+        <tr><td>Montos de dinero</td><td>Siempre en JetBrains Mono. En el hero card usar Fraunces grande. En listas usar Mono mediano. Nunca Plus Jakarta Sans para cifras.</td></tr>
+        <tr><td>FAB (botón +)</td><td>Radio 16dp. Gradiente del rol. Sombra con tinte del color del rol. Siempre centrado, elevado 14dp sobre la barra.</td></tr>
+        <tr><td>Línea del timeline</td><td>1px vertical desde el primer hasta el último elemento. Degrada a transparente hacia abajo. El punto activo tiene sombra del color de rol.</td></tr>
+        <tr><td>Modal top bar</td><td>3dp de alto, gradiente del color del rol del modal. Sin esta barra el modal se ve genérico.</td></tr>
+        <tr><td>Bottom nav activo</td><td>Tab activo: background surface del rol (opacity baja) + texto del color del rol. Inactivo: solo ícono gris sin fondo.</td></tr>
+        <tr><td>Barra de acción crítica</td><td>Siempre mostrar alerta amarilla (aviso) o roja (peligro) dentro del modal antes de los botones de confirmación.</td></tr>
+        <tr><td>Animaciones de entrada</td><td>Pantallas: fade + slide desde abajo. Cards en lista: stagger de 60ms entre cada una. Hero: scale desde 95%.</td></tr>
+        <tr><td>Animación de datos</td><td>Contadores de monto animan de 0 al valor real. Barras de progreso animan de 0% al valor. Barras de gráfica crecen desde abajo.</td></tr>
+        <tr><td>Confirmación exitosa</td><td>Botón cambia a verde + check animado + feedback háptico. Dura 2.5 segundos. Luego vuelve al estado normal.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /doc -->
+</body>
+</html>
