@@ -11,6 +11,8 @@ import '../../core/providers/admin_provider.dart';
 import '../../core/models/cliente_model.dart';
 import '../../core/models/user_model.dart';
 import 'views/admin_usuarios_view.dart';
+import 'views/admin_reportes_view.dart';
+import 'views/admin_settings_view.dart';
 import 'widgets/user_create_dialog.dart';
 import 'widgets/user_create_dialog.dart';
 import 'package:intl/intl.dart';
@@ -37,10 +39,10 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         index: _currentIndex,
         children: [
           _buildHomeView(adminState, user, formatCurrency),
-          const Center(child: Text('Reportes - Próximamente')),
-          const Center(child: Text('Acción - Próximamente')),
+          const AdminReportesView(),
+          const SizedBox(), // Spacer for center FAB
           const AdminUsuariosView(),
-          const Center(child: Text('Configuración - Próximamente')),
+          const AdminSettingsView(),
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
