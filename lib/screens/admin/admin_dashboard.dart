@@ -7,12 +7,18 @@ import '../../widgets/stat_card.dart';
 import '../../widgets/list_card.dart';
 import '../../widgets/role_chip.dart';
 import '../../core/providers/auth_provider.dart';
+import '../../core/providers/admin_provider.dart';
+import 'package:intl/intl.dart';
 
 class AdminDashboard extends ConsumerWidget {
   const AdminDashboard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final adminState = ref.watch(adminProvider);
+    final user = ref.watch(authProvider).user;
+    final formatCurrency = NumberFormat.simpleCurrency();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -34,7 +40,7 @@ class AdminDashboard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Bienvenido, Carlos M.',
+                        'Bienvenido, ${user?.nombre.split(' ')[0] ?? 'Admin'}',
                         style: AppTypography.subtext,
                       ),
                     ],
@@ -60,85 +66,130 @@ class AdminDashboard extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
 
-              // Hero
-              const HeroCard(
-                role: Role.admin,
-                label: 'Cartera Total',
-                amount: '847,320',
-                tags: ['+12.4%', '142 créditos'],
-              ),
-              const SizedBox(height: 24),
-
-              // Stats Grid
-              const Row(
-                children: [
-                  Expanded(
-                    child: StatCard(
-                      role: Role.admin,
-                      label: 'Desembolsos hoy',
-                      value: '\$23,500',
-                      trendText: '+8 vs ayer',
-                      isUp: true,
-                      icon: Icon(Icons.account_balance_wallet, color: AppColors.admin, size: 20),
-                    ),
+              // Data states
+              adminState.when(
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(40.0),
+                    child: CircularProgressIndicator(),
                   ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: StatCard(
-                      role: Role.admin,
-                      label: 'Nuevos Clientes',
-                      value: '14',
-                      trendText: '+2 vs ayer',
-                      isUp: true,
-                      icon: Icon(Icons.people, color: AppColors.admin, size: 20),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-
-              // Recent Activity or Audit Log
-              Text(
-                'Actividad Reciente',
-                style: AppTypography.cardTitle.copyWith(fontSize: 16, color: AppColors.ink),
-              ),
-              const SizedBox(height: 16),
-
-              // Placeholder for ListCards (Audit Log representation)
-              ListCard(
-                role: Role.admin,
-                title: 'Desembolso aprobado',
-                subtitle: 'Asesor: María L. · Cliente: J. Rodríguez',
-                amount: '\$5,000',
-                badge: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.okSurface,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text('OK', style: TextStyle(color: AppColors.ok, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
-                icon: const Icon(Icons.check_circle, color: AppColors.ok, size: 22),
-              ),
-              ListCard(
-                role: Role.admin,
-                title: 'Crédito en mora',
-                subtitle: 'Cobrador: A. García · 3 días vencido',
-                amount: '#1055',
-                badge: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.warnSurface,
-                    borderRadius: BorderRadius.circular(6),
+                error: (err, stack) => Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(40.0),
+                    child: Text('Error: $err', style: const TextStyle(color: AppColors.error)),
                   ),
-                  child: const Text('Aviso', style: TextStyle(color: AppColors.warn, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
-                icon: const Icon(Icons.warning, color: AppColors.warn, size: 22),
+                data: (data) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Hero
+                    HeroCard(
+                      role: Role.admin,
+                      label: 'Cartera Total',
+                      amount: formatCurrency.format(data.carteraTotal),
+                      tags: [
+                        '${data.prestamos.where((p) => p.estado == 'activo').length} activos',
+                        '${data.prestamos.length} créditos'
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Stats Grid
+                    Row(
+                      children: [
+                        Expanded(
+                          child: StatCard(
+                            role: Role.admin,
+                            label: 'Cobrado Hoy',
+                            value: formatCurrency.format(data.cobradoHoy),
+                            trendText: data.cobradoHoy > 0 ? 'Con ingresos' : 'Sin ingresos',
+                            isUp: data.cobradoHoy > 0,
+                            icon: const Icon(Icons.account_balance_wallet, color: AppColors.admin, size: 20),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: StatCard(
+                            role: Role.admin,
+                            label: 'Nuevos Clientes',
+                            value: data.clientes.length.toString(),
+                            trendText: 'Totales',
+                            isUp: true,
+                            icon: const Icon(Icons.people, color: AppColors.admin, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: StatCard(
+                            role: Role.admin,
+                            label: 'En Mora',
+                            value: data.enMora.toString(),
+                            trendText: 'Préstamos vencidos',
+                            isUp: false,
+                            icon: const Icon(Icons.warning_amber_rounded, color: AppColors.warn, size: 20),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: StatCard(
+                            role: Role.admin,
+                            label: 'Por Aprobar',
+                            value: data.porAprobar.toString(),
+                            trendText: 'Esperando',
+                            isUp: data.porAprobar == 0,
+                            icon: const Icon(Icons.access_time_rounded, color: AppColors.admin, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Resumen
+                    Text(
+                      'Resumen',
+                      style: AppTypography.cardTitle.copyWith(fontSize: 16, color: AppColors.ink),
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (data.cobradores.isNotEmpty)
+                      ...data.cobradores.map((c) => ListCard(
+                        role: Role.admin,
+                        title: c['nombre'] ?? 'Desconocido',
+                        subtitle: 'Cobrador · ${c['usuario']}',
+                        amount: '',
+                        badge: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.adminSurface,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text('Activo', style: TextStyle(color: AppColors.admin, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ),
+                        icon: const Icon(Icons.directions_walk_rounded, color: AppColors.admin, size: 22),
+                      )),
+
+                    if (data.cobradores.isEmpty)
+                      const Text('No hay cobradores registrados.', style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.ink3,
+                          )),
+                    
+                    const SizedBox(height: 100), // padding for bottom nav
+                  ],
+                ),
               ),
             ],
           ),
         ),
       ),
+
+
       bottomNavigationBar: _buildBottomNav(),
     );
   }
