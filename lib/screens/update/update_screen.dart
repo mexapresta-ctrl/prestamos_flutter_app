@@ -125,7 +125,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '\${(_progress * 100).toStringAsFixed(1)}%',
+                  '${(_progress * 100).toStringAsFixed(1)}%',
                   style: AppTypography.label.copyWith(color: AppColors.admin),
                   textAlign: TextAlign.center,
                 ),
