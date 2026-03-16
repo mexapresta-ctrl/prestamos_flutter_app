@@ -9,25 +9,49 @@ import '../../widgets/role_chip.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/models/cliente_model.dart';
+import '../../core/models/user_model.dart';
+import 'views/admin_usuarios_view.dart';
 import 'package:intl/intl.dart';
 
-class AdminDashboard extends ConsumerWidget {
+class AdminDashboard extends ConsumerStatefulWidget {
   const AdminDashboard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends ConsumerState<AdminDashboard> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final adminState = ref.watch(adminProvider);
     final user = ref.watch(authProvider).user;
     final formatCurrency = NumberFormat.simpleCurrency();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          _buildHomeView(adminState, user, formatCurrency),
+          const Center(child: Text('Reportes - Próximamente')),
+          const Center(child: Text('Acción - Próximamente')),
+          const AdminUsuariosView(),
+          const Center(child: Text('Configuración - Próximamente')),
+        ],
+      ),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildHomeView(AsyncValue<AdminDashboardData> adminState, UserModel? user, NumberFormat formatCurrency) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
               // Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -254,11 +278,7 @@ class AdminDashboard extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-
-
-      bottomNavigationBar: _buildBottomNav(),
-    );
+      );
   }
 
   Widget _buildBottomNav() {
@@ -271,35 +291,42 @@ class AdminDashboard extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(icon: Icons.home, label: 'Inicio', isActive: true),
-          _buildNavItem(icon: Icons.bar_chart, label: 'Reportes', isActive: false),
+          _buildNavItem(icon: Icons.home, label: 'Inicio', index: 0),
+          _buildNavItem(icon: Icons.bar_chart, label: 'Reportes', index: 1),
           // FAB placeholder
-          Container(
-            width: 50,
-            height: 50,
-            margin: const EdgeInsets.only(bottom: 20),
-            decoration: BoxDecoration(
-              gradient: AppColors.adminGradient,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x663447E8),
-                  blurRadius: 14,
-                  offset: Offset(0, 4),
-                )
-              ],
+          GestureDetector(
+            onTap: () => setState(() => _currentIndex = 2),
+            child: Container(
+              width: 50,
+              height: 50,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                gradient: AppColors.adminGradient,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x663447E8),
+                    blurRadius: 14,
+                    offset: Offset(0, 4),
+                  )
+                ],
+              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
-            child: const Icon(Icons.add, color: Colors.white, size: 28),
           ),
-          _buildNavItem(icon: Icons.people, label: 'Usuarios', isActive: false),
-          _buildNavItem(icon: Icons.settings, label: 'Config', isActive: false),
+          _buildNavItem(icon: Icons.people, label: 'Usuarios', index: 3),
+          _buildNavItem(icon: Icons.settings, label: 'Config', index: 4),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem({required IconData icon, required String label, required bool isActive}) {
-    return Column(
+  Widget _buildNavItem({required IconData icon, required String label, required int index}) {
+    final isActive = _currentIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
@@ -324,6 +351,7 @@ class AdminDashboard extends ConsumerWidget {
           ),
         ),
       ],
+      ),
     );
   }
 }
