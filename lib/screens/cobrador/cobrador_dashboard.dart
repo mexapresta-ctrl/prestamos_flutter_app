@@ -281,7 +281,7 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                       ...data.prestamos.map((prestamo) {
                         final cliente = data.clientes.firstWhere(
                           (c) => c.id.toString() == prestamo.clienteId.toString(), 
-                          orElse: () => ClienteModel(id: 0, nombre: 'Desconocido', telefono: '')
+                          orElse: () => ClienteModel(id: '', nombre: 'Desconocido', telefono: '')
                         );
                         
                         // Determinar si ya se cobró hoy

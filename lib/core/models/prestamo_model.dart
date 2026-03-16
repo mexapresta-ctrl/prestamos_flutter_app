@@ -1,8 +1,8 @@
 class PrestamoModel {
-  final int id;
+  final String id;
   final String? codigo;
-  final int clienteId;
-  final int cobradorId;
+  final String clienteId;
+  final String cobradorId;
   final num cuotaSemanal;
   final int cuotasTotales;
   final int cuotasPagadas;
@@ -29,10 +29,10 @@ class PrestamoModel {
     }
 
     return PrestamoModel(
-      id: json['id'] as int,
+      id: json['id'] as String,
       codigo: json['codigo'] as String?,
-      clienteId: json['clienteId'] as int,
-      cobradorId: json['cobradorId'] as int,
+      clienteId: json['clienteId'] as String? ?? json['cliente_id'] as String,
+      cobradorId: json['cobradorId'] as String? ?? json['cobrador_id'] as String,
       cuotaSemanal: (json['cuotaSemanal'] as num?) ?? 0.0,
       cuotasTotales: (json['cuotasTotales'] as int?) ?? 0,
       cuotasPagadas: (json['cuotasPagadas'] as int?) ?? 0,
