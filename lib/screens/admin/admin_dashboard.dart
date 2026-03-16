@@ -11,6 +11,8 @@ import '../../core/providers/admin_provider.dart';
 import '../../core/models/cliente_model.dart';
 import '../../core/models/user_model.dart';
 import 'views/admin_usuarios_view.dart';
+import 'widgets/user_create_dialog.dart';
+import 'widgets/user_create_dialog.dart';
 import 'package:intl/intl.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
@@ -295,7 +297,12 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
           _buildNavItem(icon: Icons.bar_chart, label: 'Reportes', index: 1),
           // FAB placeholder
           GestureDetector(
-            onTap: () => setState(() => _currentIndex = 2),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => const UserCreateDialog(),
+              );
+            },
             child: Container(
               width: 50,
               height: 50,
