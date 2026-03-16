@@ -1,7 +1,6 @@
 import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
@@ -33,55 +32,61 @@ class _UpdateScreenState extends State<UpdateScreen> {
     try {
       if (!Platform.isAndroid) return;
 
-      // Use temporary directory so Android cleans up the APK when space is needed 
-      // or when the app is uninstalled. It doesn't bloat the user's Downloads folder.
-      final dir = await getTemporaryDirectory();
-      // Ensure we always use a fixed name so it overwrites the previous one
-      final filePath = '\${dir.path}/mexa-presta-update.apk';
+      // Usar flutter_file_downloader asegura descargar los archivos resolviendo los permisos correctamente.
+      // Al usar downloadDestination: DownloadDestinations.appFiles el APK se guardará
+      // en la memoria limpia (Data) del teléfono sin ensuciar la carpeta visible de "Descargas" del usuario.
+      FileDownloader.downloadFile(
+        url: widget.appUrl,
+        name: 'mexa-presta-update.apk',
+        downloadDestination: DownloadDestinations.appFiles,
+        onProgress: (name, progress) {
+          setState(() {
+            _progress = progress / 100.0;
+          });
+        },
+        onDownloadCompleted: (path) async {
+          setState(() {
+            _statusText = 'Descarga Completada';
+            _detailText = 'Iniciando la instalación. Si Android te pide permisos para instalar aplicaciones desconocidas, acéptalos.';
+            _isDownloading = false;
+            _progress = 1.0;
+          });
 
-      Dio dio = Dio();
-      await dio.download(
-        widget.appUrl,
-        filePath,
-        onReceiveProgress: (received, total) {
-          if (total != -1) {
-            setState(() {
-              _progress = received / total;
-            });
+          // Iniciar la instalación
+          final result = await OpenFilex.open(path);
+          
+          if (result.type != ResultType.done) {
+            if (mounted) {
+              setState(() {
+                _statusText = 'Error en Instalación';
+                _detailText = 'No se pudo iniciar el instalador (Código: \${result.message}). Por favor, contacta a soporte.';
+                _isDownloading = false;
+              });
+            }
           }
         },
+        onDownloadError: (errorMessage) {
+          if (mounted) {
+            setState(() {
+              _statusText = 'Error en la Descarga';
+              _detailText = 'Ocurrió el siguiente error: $errorMessage. Verifica tu conexión a internet o intenta nuevamente.';
+              _isDownloading = false;
+              _progress = 0;
+            });
+          }
+          debugPrint('Download error: $errorMessage');
+        },
       );
-
-      setState(() {
-        _statusText = 'Descarga Completada';
-        _detailText = 'Iniciando la instalación. Si Android te pide permisos para instalar aplicaciones desconocidas, acéptalos.';
-        _isDownloading = false;
-        _progress = 1.0;
-      });
-
-      // Install the downloaded APK from the cache directory
-      final result = await OpenFilex.open(filePath);
-      
-      if (result.type != ResultType.done) {
-        if (mounted) {
-          setState(() {
-            _statusText = 'Error en Instalación';
-            _detailText = 'No se pudo iniciar el instalador (Código: \${result.type}). Por favor, contacta a soporte.';
-            _isDownloading = false;
-          });
-        }
-      }
-
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusText = 'Error en la Descarga';
-          _detailText = 'Hubo un problema al intentar descargar el archivo. Verifica tu conexión a internet o intenta nuevamente.';
+          _statusText = 'Error en la Ejecución';
+          _detailText = 'Excepción: $e';
           _isDownloading = false;
           _progress = 0;
         });
       }
-      debugPrint('Error downloading update: $e');
+      debugPrint('Exception downloading update: $e');
     }
   }
 
@@ -125,7 +130,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '${(_progress * 100).toStringAsFixed(1)}%',
+                  '\${(_progress * 100).toStringAsFixed(1)}%',
                   style: AppTypography.label.copyWith(color: AppColors.admin),
                   textAlign: TextAlign.center,
                 ),
