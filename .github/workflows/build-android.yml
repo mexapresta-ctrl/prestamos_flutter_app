@@ -40,3 +40,14 @@ jobs:
         with:
           name: mexa-presta.apk
           path: build/app/outputs/flutter-apk/mexa-presta.apk
+
+      - name: Extract Version and Update Supabase
+        run: |
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          echo "Updating Supabase min_version to $VERSION"
+          curl -X PATCH 'https://cogvtgydumgprhnwxftf.supabase.co/rest/v1/app_config?key=eq.min_version' \
+          -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZ3Z0Z3lkdW1ncHJobnd4ZnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDEzMzEsImV4cCI6MjA4OTA3NzMzMX0.QLWKLRwef7B1FyJBKKEFiiwnecB1_8HEoIaONghUWMs" \
+          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZ3Z0Z3lkdW1ncHJobnd4ZnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDEzMzEsImV4cCI6MjA4OTA3NzMzMX0.QLWKLRwef7B1FyJBKKEFiiwnecB1_8HEoIaONghUWMs" \
+          -H "Content-Type: application/json" \
+          -H "Prefer: return=minimal" \
+          -d "{\"value\": \"$VERSION\"}"
