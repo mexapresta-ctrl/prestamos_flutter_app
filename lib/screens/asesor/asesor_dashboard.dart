@@ -66,7 +66,7 @@ class AsesorDashboard extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // Stats Grid
-              Row(
+              const Row(
                 children: [
                   Expanded(
                     child: StatCard(
@@ -78,7 +78,7 @@ class AsesorDashboard extends ConsumerWidget {
                       icon: Icon(Icons.file_copy_outlined, color: AppColors.asesor, size: 20),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16),
                   Expanded(
                     child: StatCard(
                       role: Role.asesor,
@@ -111,9 +111,9 @@ class AsesorDashboard extends ConsumerWidget {
                     color: AppColors.okSurface,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('Al día', style: TextStyle(color: AppColors.ok, fontSize: 10, fontWeight: FontWeight.bold)),
+                  child: const Text('Al día', style: TextStyle(color: AppColors.ok, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
-                icon: Icon(Icons.person, color: AppColors.asesor, size: 22),
+                icon: const Icon(Icons.person, color: AppColors.asesor, size: 22),
               ),
               ListCard(
                 role: Role.asesor,
@@ -126,9 +126,9 @@ class AsesorDashboard extends ConsumerWidget {
                     color: AppColors.warnSurface,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('Por vencer', style: TextStyle(color: AppColors.warn, fontSize: 10, fontWeight: FontWeight.bold)),
+                  child: const Text('Por vencer', style: TextStyle(color: AppColors.warn, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
-                icon: Icon(Icons.person, color: AppColors.asesor, size: 22),
+                icon: const Icon(Icons.person, color: AppColors.asesor, size: 22),
               ),
             ],
           ),

@@ -12,6 +12,7 @@ class ConfirmModal extends StatelessWidget {
   final LinearGradient topBarGradient;
   final Color iconBackgroundColor;
   final List<Widget> details;
+  final Widget? customBody;
   final String confirmText;
   final String cancelText;
   final ButtonType confirmButtonType;
@@ -26,6 +27,7 @@ class ConfirmModal extends StatelessWidget {
     required this.topBarGradient,
     required this.iconBackgroundColor,
     required this.details,
+    this.customBody,
     this.confirmText = '✓ Confirmar',
     this.cancelText = 'Cancelar',
     this.confirmButtonType = ButtonType.admin,
@@ -114,11 +116,11 @@ class ConfirmModal extends StatelessWidget {
                       border: Border.all(color: const Color(0x269A5500)), // rgba(154,85,0,.15)
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Row(
+                    child: const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('⚠️', style: TextStyle(fontSize: 13)),
-                        const SizedBox(width: 10),
+                        Text('⚠️', style: TextStyle(fontSize: 13)),
+                        SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             'Esta acción queda registrada en auditoría',
@@ -141,7 +143,13 @@ class ConfirmModal extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
               child: Column(
-                children: details,
+                children: [
+                  ...details,
+                  if (customBody != null) ...[
+                    const SizedBox(height: 16),
+                    customBody!,
+                  ]
+                ],
               ),
             ),
             // Footer

@@ -44,7 +44,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Bienvenido 👋'), backgroundColor: AppColors.ok),
+        const SnackBar(content: Text('Bienvenido 👋'), backgroundColor: AppColors.ok),
       );
       
       Widget nextScreen;

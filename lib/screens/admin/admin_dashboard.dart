@@ -57,7 +57,7 @@ class AdminDashboard extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // Stats Grid
-              Row(
+              const Row(
                 children: [
                   Expanded(
                     child: StatCard(
@@ -69,7 +69,7 @@ class AdminDashboard extends ConsumerWidget {
                       icon: Icon(Icons.account_balance_wallet, color: AppColors.admin, size: 20),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16),
                   Expanded(
                     child: StatCard(
                       role: Role.admin,
@@ -103,9 +103,9 @@ class AdminDashboard extends ConsumerWidget {
                     color: AppColors.okSurface,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('OK', style: TextStyle(color: AppColors.ok, fontSize: 10, fontWeight: FontWeight.bold)),
+                  child: const Text('OK', style: TextStyle(color: AppColors.ok, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
-                icon: Icon(Icons.check_circle, color: AppColors.ok, size: 22),
+                icon: const Icon(Icons.check_circle, color: AppColors.ok, size: 22),
               ),
               ListCard(
                 role: Role.admin,
@@ -118,9 +118,9 @@ class AdminDashboard extends ConsumerWidget {
                     color: AppColors.warnSurface,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('Aviso', style: TextStyle(color: AppColors.warn, fontSize: 10, fontWeight: FontWeight.bold)),
+                  child: const Text('Aviso', style: TextStyle(color: AppColors.warn, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
-                icon: Icon(Icons.warning, color: AppColors.warn, size: 22),
+                icon: const Icon(Icons.warning, color: AppColors.warn, size: 22),
               ),
             ],
           ),

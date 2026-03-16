@@ -5,23 +5,29 @@ import '../theme/app_typography.dart';
 enum InputState { def, active, ok, error }
 
 class CustomInput extends StatefulWidget {
-  final String label;
+  final String? label;
   final String? initialValue;
   final ValueChanged<String>? onChanged;
   final InputState initialState;
   final String? tagText;
   final TextInputType? keyboardType;
   final bool obscureText;
+  final TextEditingController? controller;
+  final Widget? prefix;
+  final String? hintText;
 
   const CustomInput({
     super.key,
-    required this.label,
+    this.label,
     this.initialValue,
     this.onChanged,
     this.initialState = InputState.def,
     this.tagText,
     this.keyboardType,
     this.obscureText = false,
+    this.controller,
+    this.prefix,
+    this.hintText,
   });
 
   @override
@@ -96,9 +102,9 @@ class CustomInputState extends State<CustomInput> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.label.isNotEmpty) ...[
+        if (widget.label != null && widget.label!.isNotEmpty) ...[
           Text(
-            widget.label.toUpperCase(),
+            widget.label!.toUpperCase(),
             style: AppTypography.label,
           ),
           const SizedBox(height: 8),
@@ -121,9 +127,11 @@ class CustomInputState extends State<CustomInput> {
             ),
             child: Row(
               children: [
+                if (widget.prefix != null) widget.prefix!,
                 Expanded(
                   child: TextFormField(
-                    initialValue: widget.initialValue,
+                    controller: widget.controller,
+                    initialValue: widget.controller == null ? widget.initialValue : null,
                     onChanged: widget.onChanged,
                     keyboardType: widget.keyboardType,
                     obscureText: widget.obscureText,
@@ -133,7 +141,8 @@ class CustomInputState extends State<CustomInput> {
                       fontWeight: fontWeight,
                       color: textColor,
                     ),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
+                      hintText: widget.hintText,
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
                     ),
