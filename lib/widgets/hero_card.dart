@@ -10,12 +10,12 @@ class HeroCard extends StatelessWidget {
   final List<String> tags;
 
   const HeroCard({
-    Key? key,
+    super.key,
     required this.role,
     required this.label,
     required this.amount,
     required this.tags,
-  }) : super(key: key);
+  });
 
   LinearGradient get _gradient {
     switch (role) {
@@ -64,13 +64,13 @@ class HeroCard extends StatelessWidget {
                   Container(
                     width: 12,
                     height: 1,
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     margin: const EdgeInsets.only(right: 6),
                   ),
                   Text(
                     label.toUpperCase(),
                     style: AppTypography.label.copyWith(
-                      color: Colors.white.withOpacity(0.55),
+                      color: Colors.white.withValues(alpha: 0.55),
                       letterSpacing: 2,
                     ),
                   ),
@@ -85,7 +85,7 @@ class HeroCard extends StatelessWidget {
                     style: AppTypography.heroAmount.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w300,
-                      color: Colors.white.withOpacity(0.75),
+                      color: Colors.white.withValues(alpha: 0.75),
                     ),
                   ),
                   Text(
@@ -111,8 +111,8 @@ class HeroCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        color: Colors.white.withValues(alpha: 0.14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         borderRadius: BorderRadius.circular(99),
       ),
       child: Text(

@@ -12,14 +12,14 @@ class StatCard extends StatelessWidget {
   final Widget icon;
 
   const StatCard({
-    Key? key,
+    super.key,
     required this.role,
     required this.label,
     required this.value,
     required this.trendText,
     required this.isUp,
     required this.icon,
-  }) : super(key: key);
+  });
 
   Color get _primaryColor {
     switch (role) {

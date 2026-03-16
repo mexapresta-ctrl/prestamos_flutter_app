@@ -144,7 +144,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               margin: const EdgeInsets.symmetric(horizontal: 4),
                               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                               decoration: BoxDecoration(
-                                color: isSelected ? color.withOpacity(0.1) : AppColors.surface1,
+                                color: isSelected ? color.withValues(alpha: 0.1) : AppColors.surface1,
                                 border: Border.all(color: isSelected ? color : AppColors.border, width: 2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -192,7 +192,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         decoration: BoxDecoration(
                           color: AppColors.errorSurface,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           authState.error!,

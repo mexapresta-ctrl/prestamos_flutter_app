@@ -2,10 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/supabase_config.dart';
 import '../models/user_model.dart';
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier();
-});
-
 class AuthState {
   final UserModel? user;
   final bool isLoading;
@@ -25,13 +21,16 @@ class AuthState {
     return AuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
-      error: error, // Can be set to null explicitly
+      error: error,
     );
   }
 }
 
-class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(AuthState());
+class AuthNotifier extends Notifier<AuthState> {
+  @override
+  AuthState build() {
+    return AuthState();
+  }
 
   void clearError() {
     state = state.copyWith(error: null);
@@ -45,7 +44,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           .from('usuarios')
           .select('*')
           .eq('usuario', usuario)
-          .eq('password', password) // In production, never query plain passwords. But matching the web approach here.
+          .eq('password', password)
           .eq('rol', rol)
           .eq('activo', true)
           .maybeSingle();
@@ -54,7 +53,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final user = UserModel.fromJson(data);
         state = state.copyWith(isLoading: false, user: user);
         
-        // Log Audit (fire and forget)
         _logAudit(user, 'LOGIN', '\${user.nombre} inició sesión en la app');
 
         return true;
@@ -70,7 +68,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false, 
         error: 'Ocurrió un error al conectar con el servidor.'
       );
-      print('Login error: \$e');
       return false;
     }
   }
@@ -90,11 +87,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
         .insert({
           'tipo': tipo,
           'descripcion': descripcion,
-          'usuario': user.nombre, // Match web format
+          'usuario': user.nombre,
           'rol': user.rol,
         });
     } catch (e) {
-      print('Audit log error: \$e');
+      // Ignore
     }
   }
 }
+
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(() {
+  return AuthNotifier();
+});

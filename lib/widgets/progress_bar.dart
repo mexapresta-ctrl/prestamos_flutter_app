@@ -10,12 +10,12 @@ class ProgressBar extends StatelessWidget {
   final String subtext;
 
   const ProgressBar({
-    Key? key,
+    super.key,
     required this.role,
     required this.label,
     required this.percentage,
     required this.subtext,
-  }) : super(key: key);
+  });
 
   Color get _primaryColor {
     switch (role) {

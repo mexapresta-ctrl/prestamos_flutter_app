@@ -14,7 +14,7 @@ class CustomInput extends StatefulWidget {
   final bool obscureText;
 
   const CustomInput({
-    Key? key,
+    super.key,
     required this.label,
     this.initialValue,
     this.onChanged,
@@ -22,13 +22,13 @@ class CustomInput extends StatefulWidget {
     this.tagText,
     this.keyboardType,
     this.obscureText = false,
-  }) : super(key: key);
+  });
 
   @override
-  _CustomInputState createState() => _CustomInputState();
+  CustomInputState createState() => CustomInputState();
 }
 
-class _CustomInputState extends State<CustomInput> {
+class CustomInputState extends State<CustomInput> {
   late InputState _currentState;
 
   @override

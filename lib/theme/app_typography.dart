@@ -41,7 +41,7 @@ class AppTypography {
         color: AppColors.ink4,
       );
 
-  static TextStyle get monospace => GoogleFonts.jetbrainsMono(
+  static TextStyle get monospace => GoogleFonts.jetBrainsMono(
         fontSize: 14,
         fontWeight: FontWeight.w500,
       );

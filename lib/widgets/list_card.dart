@@ -12,14 +12,14 @@ class ListCard extends StatelessWidget {
   final Widget icon;
 
   const ListCard({
-    Key? key,
+    super.key,
     required this.role,
     required this.title,
     required this.subtitle,
     required this.amount,
     required this.badge,
     required this.icon,
-  }) : super(key: key);
+  });
 
   Color get _primaryColor {
     switch (role) {

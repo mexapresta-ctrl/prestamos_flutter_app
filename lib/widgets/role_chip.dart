@@ -8,11 +8,11 @@ class RoleChip extends StatelessWidget {
   final IconData icon;
 
   const RoleChip({
-    Key? key,
+    super.key,
     required this.role,
     required this.text,
     required this.icon,
-  }) : super(key: key);
+  });
 
   Gradient get _gradient {
     switch (role) {

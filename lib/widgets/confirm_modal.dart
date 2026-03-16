@@ -17,7 +17,7 @@ class ConfirmModal extends StatelessWidget {
   final ButtonType confirmButtonType;
 
   const ConfirmModal({
-    Key? key,
+    super.key,
     required this.onConfirm,
     required this.onCancel,
     required this.title,
@@ -29,7 +29,7 @@ class ConfirmModal extends StatelessWidget {
     this.confirmText = '✓ Confirmar',
     this.cancelText = 'Cancelar',
     this.confirmButtonType = ButtonType.admin,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -185,13 +185,13 @@ class ModalRow extends StatelessWidget {
   final Color? bigValueColor;
 
   const ModalRow({
-    Key? key,
+    super.key,
     required this.keyText,
     required this.keyIcon,
     required this.valueText,
     this.isBigValue = false,
     this.bigValueColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
