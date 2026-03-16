@@ -1,6 +1,7 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_file_downloader/flutter_file_downloader.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
@@ -32,54 +33,55 @@ class _UpdateScreenState extends State<UpdateScreen> {
     try {
       if (!Platform.isAndroid) return;
 
-      FileDownloader.downloadFile(
-        url: widget.appUrl,
-        name: 'mexa-presta-update.apk',
-        onProgress: (fileName, progress) {
-          setState(() {
-            _progress = progress / 100.0;
-          });
-        },
-        onDownloadCompleted: (path) async {
-          setState(() {
-            _statusText = 'Descarga Completada';
-            _detailText = 'Iniciando la instalación. Si Android te pide permisos para instalar aplicaciones desconocidas, acéptalos.';
-            _isDownloading = false;
-            _progress = 1.0;
-          });
+      // Use temporary directory so Android cleans up the APK when space is needed 
+      // or when the app is uninstalled. It doesn't bloat the user's Downloads folder.
+      final dir = await getTemporaryDirectory();
+      // Ensure we always use a fixed name so it overwrites the previous one
+      final filePath = '\${dir.path}/mexa-presta-update.apk';
 
-          // Install the downloaded APK
-          final result = await OpenFilex.open(path);
-          if (result.type != ResultType.done) {
-            if (mounted) {
-              setState(() {
-                _statusText = 'Error en Instalación';
-                _detailText = 'No se pudo abrir el instalador términal. Intenta buscar el archivo "mexa-presta-update.apk" en tu carpeta de Descargas e instalarlo manualmente.';
-                _isDownloading = false;
-              });
-            }
-          }
-        },
-        onDownloadError: (errorMessage) {
-          if (mounted) {
+      Dio dio = Dio();
+      await dio.download(
+        widget.appUrl,
+        filePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
             setState(() {
-              _statusText = 'Error en la Descarga';
-              _detailText = 'Hubo un problema: $errorMessage';
-              _isDownloading = false;
-              _progress = 0;
+              _progress = received / total;
             });
           }
         },
       );
+
+      setState(() {
+        _statusText = 'Descarga Completada';
+        _detailText = 'Iniciando la instalación. Si Android te pide permisos para instalar aplicaciones desconocidas, acéptalos.';
+        _isDownloading = false;
+        _progress = 1.0;
+      });
+
+      // Install the downloaded APK from the cache directory
+      final result = await OpenFilex.open(filePath);
+      
+      if (result.type != ResultType.done) {
+        if (mounted) {
+          setState(() {
+            _statusText = 'Error en Instalación';
+            _detailText = 'No se pudo iniciar el instalador (Código: \${result.type}). Por favor, contacta a soporte.';
+            _isDownloading = false;
+          });
+        }
+      }
+
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusText = 'Error Inesperado';
-          _detailText = 'Ocurrió un error al preparar la descarga: $e';
+          _statusText = 'Error en la Descarga';
+          _detailText = 'Hubo un problema al intentar descargar el archivo. Verifica tu conexión a internet o intenta nuevamente.';
           _isDownloading = false;
           _progress = 0;
         });
       }
+      debugPrint('Error downloading update: $e');
     }
   }
 
@@ -129,7 +131,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                 ),
               ] else ...[
                 CustomButton(
-                  text: _progress >= 1.0 ? 'Instalar de nuevo' : 'Descargar e Instalar',
+                  text: _progress >= 1.0 ? 'Reintentar instalación' : 'Descargar e Instalar',
                   onPressed: _startDownload,
                   icon: Icons.download_rounded,
                   type: ButtonType.admin,
