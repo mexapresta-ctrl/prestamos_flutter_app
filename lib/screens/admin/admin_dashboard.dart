@@ -6,6 +6,7 @@ import '../../widgets/hero_card.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/list_card.dart';
 import '../../widgets/role_chip.dart';
+import '../../core/providers/auth_provider.dart';
 
 class AdminDashboard extends ConsumerWidget {
   const AdminDashboard({super.key});
@@ -38,10 +39,22 @@ class AdminDashboard extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const RoleChip(
-                    role: Role.admin,
-                    text: 'Admin',
-                    icon: Icons.shield_rounded, // fallback icon
+                  Row(
+                    children: [
+                      const RoleChip(
+                        role: Role.admin,
+                        text: 'Admin',
+                        icon: Icons.shield_rounded, // fallback icon
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {
+                          ref.read(authProvider.notifier).logout();
+                        },
+                        icon: const Icon(Icons.logout, color: AppColors.ink4),
+                        tooltip: 'Cerrar Sesión',
+                      ),
+                    ],
                   ),
                 ],
               ),

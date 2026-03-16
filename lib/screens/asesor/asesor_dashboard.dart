@@ -7,6 +7,7 @@ import '../../widgets/stat_card.dart';
 import '../../widgets/list_card.dart';
 import '../../widgets/role_chip.dart';
 import '../../widgets/progress_bar.dart';
+import '../../core/providers/auth_provider.dart';
 
 class AsesorDashboard extends ConsumerWidget {
   const AsesorDashboard({super.key});
@@ -39,10 +40,22 @@ class AsesorDashboard extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const RoleChip(
-                    role: Role.asesor,
-                    text: 'Asesor',
-                    icon: Icons.star_border_rounded, 
+                  Row(
+                    children: [
+                      const RoleChip(
+                        role: Role.asesor,
+                        text: 'Asesor',
+                        icon: Icons.star_border_rounded, 
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {
+                          ref.read(authProvider.notifier).logout();
+                        },
+                        icon: const Icon(Icons.logout, color: AppColors.ink4),
+                        tooltip: 'Cerrar Sesión',
+                      ),
+                    ],
                   ),
                 ],
               ),
