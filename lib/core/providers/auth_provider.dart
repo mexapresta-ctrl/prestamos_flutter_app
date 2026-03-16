@@ -64,9 +64,10 @@ class AuthNotifier extends Notifier<AuthState> {
         return false;
       }
     } catch (e) {
+      print('LOGIN EXCEPTION: $e');
       state = state.copyWith(
         isLoading: false, 
-        error: 'Ocurrió un error al conectar con el servidor.'
+        error: e.toString()
       );
       return false;
     }

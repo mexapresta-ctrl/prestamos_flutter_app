@@ -173,15 +173,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     // Inputs
                     CustomInput(
                       label: 'Usuario',
-                      initialValue: '',
-                      onChanged: (val) => _usuarioController.text = val,
+                      controller: _usuarioController,
                     ),
                     const SizedBox(height: 16),
                     CustomInput(
                       label: 'Contraseña',
                       obscureText: true,
-                      initialValue: '',
-                      onChanged: (val) => _passwordController.text = val,
+                      controller: _passwordController,
                     ),
                     const SizedBox(height: 24),
 
