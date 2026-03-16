@@ -6,6 +6,7 @@ import '../../../widgets/list_card.dart';
 import '../../../widgets/role_chip.dart';
 import '../../../core/providers/admin_provider.dart';
 import '../../../widgets/hero_card.dart';
+import 'admin_cliente_detalle_view.dart';
 
 class AdminUsuariosView extends ConsumerStatefulWidget {
   const AdminUsuariosView({super.key});
@@ -97,10 +98,16 @@ class _AdminUsuariosViewState extends ConsumerState<AdminUsuariosView> with Sing
         return ListCard(
           role: Role.admin,
           title: c.nombre,
-          subtitle: c.telefono != null && c.telefono!.isNotEmpty ? 'Tel: \${c.telefono}' : 'Tel: No registrado',
+          subtitle: c.telefono != null && c.telefono!.isNotEmpty ? 'Tel: ${c.telefono}' : 'Tel: No registrado',
           amount: '',
           badge: const SizedBox(),
           icon: const Icon(Icons.person, color: AppColors.admin, size: 22),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AdminClienteDetalleView(cliente: c)),
+            );
+          },
         );
       },
     );

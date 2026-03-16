@@ -37,7 +37,7 @@ class AdminSettingsView extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user.user?.id.substring(0, 8) ?? 'admin@mexapresta.com',
+                    user.user?.rol.toUpperCase() ?? 'ADMIN',
                     style: const TextStyle(color: AppColors.ink3),
                   ),
                 ],

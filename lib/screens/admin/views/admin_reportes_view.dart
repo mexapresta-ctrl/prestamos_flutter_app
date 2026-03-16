@@ -50,7 +50,7 @@ class AdminReportesView extends ConsumerWidget {
                             child: StatCard(
                               role: Role.admin,
                               label: 'Créditos Activos',
-                              value: '\${data.prestamos.where((p) => p.estado == "activo").length}',
+                              value: '${data.prestamos.where((p) => p.estado == "activo").length}',
                               trendText: 'Estables',
                               isUp: true,
                               icon: const Icon(Icons.credit_card, color: AppColors.ok),
@@ -65,7 +65,7 @@ class AdminReportesView extends ConsumerWidget {
                             child: StatCard(
                               role: Role.admin,
                               label: 'En Mora',
-                              value: '\${data.enMora}',
+                              value: '${data.enMora}',
                               trendText: 'Atención',
                               isUp: false,
                               icon: const Icon(Icons.warning, color: AppColors.warn),
@@ -88,9 +88,9 @@ class AdminReportesView extends ConsumerWidget {
                       
                       Text('Estadísticas Visuales', style: AppTypography.headingPrincipal.copyWith(fontSize: 18)),
                       const SizedBox(height: 16),
-                      _buildStatRow('Clientes Registrados', '\${data.clientes.length}', Icons.people),
-                      _buildStatRow('Cobradores Activos', '\${data.cobradores.length}', Icons.directions_run),
-                      _buildStatRow('Préstamos Entregados', '\${data.prestamos.length}', Icons.folder_shared),
+                      _buildStatRow('Clientes Registrados', '${data.clientes.length}', Icons.people),
+                      _buildStatRow('Cobradores Activos', '${data.cobradores.length}', Icons.directions_run),
+                      _buildStatRow('Préstamos Entregados', '${data.prestamos.length}', Icons.folder_shared),
                     ],
                   );
                 },

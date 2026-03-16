@@ -10,6 +10,7 @@ class ListCard extends StatelessWidget {
   final String amount;
   final Widget badge;
   final Widget icon;
+  final VoidCallback? onTap;
 
   const ListCard({
     super.key,
@@ -19,6 +20,7 @@ class ListCard extends StatelessWidget {
     required this.amount,
     required this.badge,
     required this.icon,
+    this.onTap,
   });
 
   Color get _primaryColor {
@@ -45,7 +47,7 @@ class ListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    Widget card = Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -119,5 +121,14 @@ class ListCard extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: card,
+      );
+    }
+    return card;
   }
 }

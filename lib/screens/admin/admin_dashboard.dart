@@ -13,6 +13,7 @@ import '../../core/models/user_model.dart';
 import 'views/admin_usuarios_view.dart';
 import 'views/admin_reportes_view.dart';
 import 'views/admin_settings_view.dart';
+import 'views/admin_cliente_detalle_view.dart';
 import 'widgets/user_create_dialog.dart';
 import 'package:intl/intl.dart';
 
@@ -222,10 +223,18 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                       ...data.clientes.take(5).map((c) => ListCard(
                         role: Role.admin,
                         title: c.nombre,
-                        subtitle: c.telefono != null && c.telefono!.isNotEmpty ? 'Tel: \${c.telefono}' : 'Tel: No registrado',
+                        subtitle: c.telefono != null && c.telefono!.isNotEmpty ? 'Tel: ${c.telefono}' : 'Tel: No registrado',
                         amount: '',
                         badge: const SizedBox(), // Required parameter in ListCard
                         icon: const Icon(Icons.person, color: AppColors.admin, size: 22),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AdminClienteDetalleView(cliente: c),
+                            ),
+                          );
+                        },
                       )),
 
                     if (data.clientes.isEmpty)
@@ -253,7 +262,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                         return ListCard(
                           role: Role.admin,
                           title: cliente.nombre,
-                          subtitle: 'Crédito \${p.codigo ?? p.id.substring(0, 8)}',
+                          subtitle: 'Crédito ${p.codigo ?? p.id.substring(0, 8)}',
                           amount: formatCurrency.format(p.cuotaSemanal * p.cuotasTotales),
                           badge: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
