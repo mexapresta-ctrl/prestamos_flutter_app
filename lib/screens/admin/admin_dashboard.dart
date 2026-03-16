@@ -14,6 +14,7 @@ import 'views/admin_usuarios_view.dart';
 import 'views/admin_reportes_view.dart';
 import 'views/admin_settings_view.dart';
 import 'views/admin_cliente_detalle_view.dart';
+import 'views/admin_cliente_create_view.dart';
 import 'widgets/user_create_dialog.dart';
 import 'package:intl/intl.dart';
 
@@ -308,9 +309,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
           // FAB placeholder
           GestureDetector(
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => const UserCreateDialog(),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AdminClienteCreateView()),
               );
             },
             child: Container(
