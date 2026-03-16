@@ -8,6 +8,7 @@ import '../../widgets/list_card.dart';
 import '../../widgets/role_chip.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/admin_provider.dart';
+import '../../core/models/cliente_model.dart';
 import 'package:intl/intl.dart';
 
 class AdminDashboard extends ConsumerWidget {
@@ -173,8 +174,74 @@ class AdminDashboard extends ConsumerWidget {
                         icon: const Icon(Icons.directions_walk_rounded, color: AppColors.admin, size: 22),
                       )),
 
+
                     if (data.cobradores.isEmpty)
                       const Text('No hay cobradores registrados.', style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.ink3,
+                          )),
+                    
+                    const SizedBox(height: 32),
+
+                    // Clientes
+                    Text(
+                      'Últimos Clientes Registrados',
+                      style: AppTypography.cardTitle.copyWith(fontSize: 16, color: AppColors.ink),
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (data.clientes.isNotEmpty)
+                      ...data.clientes.take(5).map((c) => ListCard(
+                        role: Role.admin,
+                        title: c.nombre,
+                        subtitle: c.telefono != null && c.telefono!.isNotEmpty ? 'Tel: \${c.telefono}' : 'Tel: No registrado',
+                        amount: '',
+                        badge: const SizedBox(), // Required parameter in ListCard
+                        icon: const Icon(Icons.person, color: AppColors.admin, size: 22),
+                      )),
+
+                    if (data.clientes.isEmpty)
+                      const Text('No hay clientes registrados.', style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.ink3,
+                          )),
+
+                    const SizedBox(height: 32),
+
+                    // Prestamos 
+                    Text(
+                      'Préstamos Recientes',
+                      style: AppTypography.cardTitle.copyWith(fontSize: 16, color: AppColors.ink),
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (data.prestamos.isNotEmpty)
+                      ...data.prestamos.take(5).map((p) {
+                        final cliente = data.clientes.firstWhere(
+                          (c) => c.id == p.clienteId, 
+                          orElse: () => ClienteModel(id: '', nombre: 'Desconocido', telefono: '')
+                        );
+                        return ListCard(
+                          role: Role.admin,
+                          title: cliente.nombre,
+                          subtitle: 'Crédito \${p.codigo ?? p.id.substring(0, 8)}',
+                          amount: formatCurrency.format(p.cuotaSemanal * p.cuotasTotales),
+                          badge: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: p.estado == 'activo' ? AppColors.okSurface : AppColors.warnSurface,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(p.estado.toUpperCase(), style: TextStyle(color: p.estado == 'activo' ? AppColors.ok : AppColors.warn, fontSize: 10, fontWeight: FontWeight.bold)),
+                          ),
+                          icon: const Icon(Icons.credit_card, color: AppColors.admin, size: 22),
+                        );
+                      }),
+
+                    if (data.prestamos.isEmpty)
+                      const Text('No hay préstamos registrados.', style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: AppColors.ink3,
