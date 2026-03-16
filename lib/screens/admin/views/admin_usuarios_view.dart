@@ -6,7 +6,6 @@ import '../../../widgets/list_card.dart';
 import '../../../widgets/role_chip.dart';
 import '../../../core/providers/admin_provider.dart';
 import '../../../widgets/hero_card.dart';
-import '../../../widgets/hero_card.dart';
 
 class AdminUsuariosView extends ConsumerStatefulWidget {
   const AdminUsuariosView({super.key});

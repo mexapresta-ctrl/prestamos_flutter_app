@@ -1,218 +1,207 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import '../../core/providers/auth_provider.dart';
+import '../../core/providers/asesor_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/hero_card.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/list_card.dart';
-import '../../widgets/role_chip.dart';
-import '../../widgets/progress_bar.dart';
-import '../../core/providers/auth_provider.dart';
+import '../../core/models/cliente_model.dart';
 
-class AsesorDashboard extends ConsumerWidget {
+class AsesorDashboard extends ConsumerStatefulWidget {
   const AsesorDashboard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AsesorDashboard> createState() => _AsesorDashboardState();
+}
+
+class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
+  final formatCurrency = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final asesorState = ref.watch(asesorProvider);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Resumen',
-                        style: AppTypography.headingPrincipal,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Hola, María L.',
-                        style: AppTypography.subtext,
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      const RoleChip(
-                        role: Role.asesor,
-                        text: 'Asesor',
-                        icon: Icons.star_border_rounded, 
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: () {
-                          ref.read(authProvider.notifier).logout();
-                        },
-                        icon: const Icon(Icons.logout, color: AppColors.ink4),
-                        tooltip: 'Cerrar Sesión',
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Hero
-              const HeroCard(
-                role: Role.asesor,
-                label: 'Cartera Propia',
-                amount: '98,450',
-                tags: ['34 clientes', '#1'],
-              ),
-              const SizedBox(height: 16),
-              
-              const ProgressBar(
-                role: Role.asesor,
-                label: 'Meta mensual',
-                percentage: 0.78,
-                subtext: '\$78,000 de \$100,000',
-              ),
-              const SizedBox(height: 24),
-
-              // Stats Grid
-              const Row(
-                children: [
-                  Expanded(
-                    child: StatCard(
-                      role: Role.asesor,
-                      label: 'Solicitudes Activas',
-                      value: '5',
-                      trendText: '+2 vs mes ant.',
-                      isUp: true,
-                      icon: Icon(Icons.file_copy_outlined, color: AppColors.asesor, size: 20),
+        child: RefreshIndicator(
+          color: AppColors.asesor,
+          onRefresh: () => ref.read(asesorProvider.notifier).refresh(),
+          child: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(20),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Hola, \${user?.nombre?.split(" ")[0] ?? "Asesor"}',
+                              style: AppTypography.headingPrincipal,
+                            ),
+                            Text(
+                              'Panel de Asesor',
+                              style: AppTypography.label.copyWith(color: AppColors.ink3),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppColors.asesor.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.logout, color: AppColors.asesor),
+                            onPressed: () => ref.read(authProvider.notifier).logout(),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: StatCard(
-                      role: Role.asesor,
-                      label: 'Aprobadas',
-                      value: '12',
-                      trendText: '90% efectividad',
-                      isUp: true,
-                      icon: Icon(Icons.check_circle_outline, color: AppColors.asesor, size: 20),
+                    const SizedBox(height: 24),
+
+                    // State Handling
+                    asesorState.when(
+                      loading: () => const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(40.0),
+                          child: CircularProgressIndicator(color: AppColors.asesor),
+                        ),
+                      ),
+                      error: (err, stack) => Center(
+                        child: Text(
+                          'Error: $err',
+                          style: const TextStyle(color: AppColors.error),
+                        ),
+                      ),
+                      data: (data) => _buildDashboardContent(data),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-
-              Text(
-                'Clientes por Renovar',
-                style: AppTypography.cardTitle.copyWith(fontSize: 16, color: AppColors.ink),
-              ),
-              const SizedBox(height: 16),
-
-              // Placeholder for ListCards 
-              ListCard(
-                role: Role.asesor,
-                title: 'Laura Sánchez',
-                subtitle: 'Cr. #1142 · Vigente',
-                amount: '\$8,000',
-                badge: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.okSurface,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text('Al día', style: TextStyle(color: AppColors.ok, fontSize: 10, fontWeight: FontWeight.bold)),
+                  ]),
                 ),
-                icon: const Icon(Icons.person, color: AppColors.asesor, size: 22),
-              ),
-              ListCard(
-                role: Role.asesor,
-                title: 'Pedro Linares',
-                subtitle: 'Cr. #1088 · Vigente',
-                amount: '\$5,500',
-                badge: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.warnSurface,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text('Por vencer', style: TextStyle(color: AppColors.warn, fontSize: 10, fontWeight: FontWeight.bold)),
-                ),
-                icon: const Icon(Icons.person, color: AppColors.asesor, size: 22),
               ),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: AppColors.border)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(icon: Icons.home, label: 'Inicio', isActive: true),
-          _buildNavItem(icon: Icons.people, label: 'Clientes', isActive: false),
-          // FAB placeholder
-          Container(
-            width: 50,
-            height: 50,
-            margin: const EdgeInsets.only(bottom: 20),
-            decoration: BoxDecoration(
-              gradient: AppColors.asesorGradient,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x66C44C0A),
-                  blurRadius: 14,
-                  offset: Offset(0, 4),
-                )
-              ],
-            ),
-            child: const Icon(Icons.add, color: Colors.white, size: 28),
-          ),
-          _buildNavItem(icon: Icons.format_list_bulleted, label: 'Solicitudes', isActive: false),
-          _buildNavItem(icon: Icons.person, label: 'Perfil', isActive: false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem({required IconData icon, required String label, required bool isActive}) {
+  Widget _buildDashboardContent(AsesorDashboardData data) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.asesorSurface : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            color: isActive ? AppColors.asesor : AppColors.ink4,
-            size: 24,
-          ),
+        // Hero Card (KPI Principal)
+        HeroCard(
+          role: Role.asesor,
+          label: 'Monto Colocado',
+          amount: formatCurrency.format(data.montoColocado),
+          tags: const ['Créditos aprobados'],
         ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: isActive ? AppColors.asesor : AppColors.ink4,
-          ),
+        const SizedBox(height: 24),
+
+        // Stats Row
+        Row(
+          children: [
+            Expanded(
+              child: StatCard(
+                role: Role.asesor,
+                label: 'Clientes Activos',
+                value: '\${data.clientesActivos}',
+                trendText: 'Vinculados',
+                isUp: true,
+                icon: const Icon(Icons.people, color: AppColors.asesor),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: StatCard(
+                role: Role.asesor,
+                label: 'Aprobados',
+                value: '\${data.prestamosAprobados}',
+                trendText: '\${data.prestamosPendientes} pendientes',
+                isUp: true,
+                icon: const Icon(Icons.check_circle_outline, color: AppColors.ok),
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: 32),
+
+          // List Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Trámites Recientes',
+                style: AppTypography.headingPrincipal.copyWith(fontSize: 18),
+              ),
+              Text(
+              'Ver Todos',
+              style: AppTypography.label.copyWith(color: AppColors.asesor),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // List of Prestamos Tramitados
+        if (data.misPrestamosTramitados.isEmpty)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Text(
+                'No has tramitado préstamos aún.',
+                style: TextStyle(color: AppColors.ink3),
+              ),
+            ),
+          )
+        else
+          ...data.misPrestamosTramitados.map((prestamo) {
+            // Find client name
+            final cliente = data.clientes.firstWhere(
+              (c) => c.id == prestamo.clienteId,
+              orElse: () => ClienteModel(id: '', nombre: 'Desconocido'),
+            );
+
+            IconData statusIcon = Icons.schedule;
+            Color statusColor = AppColors.warn;
+            
+            if (prestamo.estado == 'activo') {
+              statusIcon = Icons.check_circle;
+              statusColor = AppColors.ok;
+            } else if (prestamo.estado == 'rechazado') {
+              statusIcon = Icons.error;
+              statusColor = AppColors.error;
+            }
+
+            return ListCard(
+              role: Role.asesor,
+              title: cliente.nombre,
+              subtitle: 'Préstamo: \${prestamo.codigo ?? "S/N"} • \${prestamo.cuotasTotales} semanas',
+              amount: formatCurrency.format(prestamo.monto),
+              badge: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  prestamo.estado.toUpperCase(),
+                  style: TextStyle(color: statusColor, fontSize: 8, fontWeight: FontWeight.bold),
+                ),
+              ),
+              icon: Icon(statusIcon, color: statusColor),
+            );
+          }),
       ],
     );
   }
