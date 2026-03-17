@@ -48,7 +48,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Split Release APK (arm64 only)
-        run: flutter build apk --release --split-per-abi --target-platform android-arm64 --no-shrink
+        run: flutter build apk --release --split-per-abi --target-platform android-arm64
 
       - name: Create GH Release
         uses: softprops/action-gh-release@v2
