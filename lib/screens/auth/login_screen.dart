@@ -54,6 +54,12 @@ final _roles = [
   ),
 ];
 
+// ── Decoded images cache so base64Decode() doesn't run on every rebuild ──
+final _avatarCache = <String, MemoryImage>{};
+MemoryImage _avatarFor(String b64) {
+  return _avatarCache.putIfAbsent(b64, () => MemoryImage(base64Decode(b64)));
+}
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -61,12 +67,20 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with SingleTickerProviderStateMixin {
   int _selectedRoleIndex = 0;
   final _usuarioController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscureText = true;
   bool _isSuccess = false;
+
+  @override
+  void dispose() {
+    _usuarioController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   void _handleLogin() async {
     final usuario = _usuarioController.text.trim();
@@ -75,19 +89,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
 
     if (usuario.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, ingresa usuario y contraseña'), backgroundColor: Color(0xFFEF4444)),
+        const SnackBar(
+          content: Text('Por favor, ingresa usuario y contraseña'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
       );
       return;
     }
 
-    final success = await ref.read(authProvider.notifier).login(usuario, password, role.id);
-    
+    final success =
+        await ref.read(authProvider.notifier).login(usuario, password, role.id);
+
     if (!mounted) return;
 
     if (success) {
-      setState(() {
-        _isSuccess = true;
-      });
+      setState(() => _isSuccess = true);
     }
   }
 
@@ -116,7 +132,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     final role = _roles[_selectedRoleIndex];
-    final authState = ref.watch(authProvider);
+
+    // ── Solo observamos los dos valores que cambian, NO el objeto completo ─
+    final isLoading = ref.watch(authProvider.select((s) => s.isLoading));
+    final error = ref.watch(authProvider.select((s) => s.error));
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
@@ -127,11 +146,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Header (Logo)
+                // ── Header (Logo) ────────────────────────────────────────
                 Column(
                   children: [
-                    Image.memory(
-                      base64Decode(LoginAssets.logoBase64),
+                    Image(
+                      image: MemoryImage(base64Decode(LoginAssets.logoBase64)),
                       height: 60,
                     ),
                     const SizedBox(height: 16),
@@ -143,11 +162,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
+                    const Text(
                       'Impulsando tu crecimiento',
                       style: TextStyle(
                         fontSize: 14,
-                        color: const Color(0xFF6B7280),
+                        color: Color(0xFF6B7280),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -155,7 +174,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                 ),
                 const SizedBox(height: 32),
 
-                // Main Card
+                // ── Main Card ────────────────────────────────────────────
                 Container(
                   width: double.infinity,
                   constraints: const BoxConstraints(maxWidth: 450),
@@ -170,196 +189,268 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                       )
                     ],
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
-                  child: _isSuccess ? 
-                    SizedBox(
-                      height: 300,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: SuccessAnimationWidget(
-                              onComplete: _onAnimationComplete,
-                              primaryColor: role.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'Acceso Concedido',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: role.primary,
-                            ),
-                          )
-                        ],
-                      ),
-                    )
-                  : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Role Selector
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(_roles.length, (index) {
-                          final r = _roles[index];
-                          final isSelected = _selectedRoleIndex == index;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() => _selectedRoleIndex = index);
-                              ref.read(authProvider.notifier).clearError();
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              margin: const EdgeInsets.symmetric(horizontal: 6),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: isSelected ? r.primary : const Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(100),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+                  child: _isSuccess
+                      ? SizedBox(
+                          height: 300,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: SuccessAnimationWidget(
+                                  onComplete: _onAnimationComplete,
+                                  primaryColor: role.primary,
+                                ),
                               ),
-                              child: Text(
-                                r.title,
+                              const SizedBox(height: 24),
+                              Text(
+                                'Acceso Concedido',
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white : const Color(0xFF4B5563),
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                  fontSize: 13,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: role.primary,
                                 ),
+                              )
+                            ],
+                          ),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ── Role Selector ────────────────────────────
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(_roles.length, (index) {
+                                final r = _roles[index];
+                                final isSelected = _selectedRoleIndex == index;
+                                return GestureDetector(
+                                  onTap: () {
+                                    setState(
+                                        () => _selectedRoleIndex = index);
+                                    ref
+                                        .read(authProvider.notifier)
+                                        .clearError();
+                                  },
+                                  child: AnimatedContainer(
+                                    duration:
+                                        const Duration(milliseconds: 200),
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? r.primary
+                                          : const Color(0xFFF3F4F6),
+                                      borderRadius: BorderRadius.circular(100),
+                                    ),
+                                    child: Text(
+                                      r.title,
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? Colors.white
+                                            : const Color(0xFF4B5563),
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ),
+                            const SizedBox(height: 32),
+
+                            // ── Avatar & Title ───────────────────────────
+                            Center(
+                              child: Column(
+                                children: [
+                                  Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: role.light,
+                                      border: Border.all(
+                                        color: role.primary
+                                            .withValues(alpha: 0.2),
+                                        width: 4,
+                                      ),
+                                    ),
+                                    child: ClipOval(
+                                      child: Image(
+                                        image: _avatarFor(role.avatarBase64),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    role.title,
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF111827),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    role.description,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          );
-                        }),
-                      ),
-                      const SizedBox(height: 32),
+                            const SizedBox(height: 24),
 
-                      // Avatar & Title
-                      Center(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: role.light,
-                                border: Border.all(color: role.primary.withValues(alpha: 0.2), width: 4),
-                              ),
-                              child: ClipOval(
-                                child: Image.memory(
-                                  base64Decode(role.avatarBase64),
-                                  fit: BoxFit.cover,
+                            // ── Error message ────────────────────────────
+                            if (error != null)
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF2F2),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                      color: const Color(0xFFFCA5A5)),
                                 ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.error_outline,
+                                        color: Color(0xFFEF4444), size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        error,
+                                        style: const TextStyle(
+                                            color: Color(0xFFB91C1C),
+                                            fontSize: 13),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                            // ── Usuario ──────────────────────────────────
+                            const Text('Usuario',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF374151))),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _usuarioController,
+                              // No clearError aquí — evita rebuilds en cada keypress
+                              decoration: InputDecoration(
+                                hintText: 'Ingresa tu usuario',
+                                hintStyle: const TextStyle(
+                                    color: Color(0xFF9CA3AF), fontSize: 14),
+                                prefixIcon: const Icon(Icons.person_outline,
+                                    color: Color(0xFF9CA3AF), size: 20),
+                                filled: true,
+                                fillColor: const Color(0xFFF9FAFB),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 14, horizontal: 16),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                        color: Color(0xFFD1D5DB))),
+                                enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                        color: Color(0xFFD1D5DB))),
+                                focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                        color: role.primary, width: 2)),
                               ),
                             ),
                             const SizedBox(height: 16),
-                            Text(
-                              role.title,
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF111827),
+
+                            // ── Contraseña ───────────────────────────────
+                            const Text('Contraseña',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF374151))),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _passwordController,
+                              obscureText: _obscureText,
+                              // No clearError aquí — evita rebuilds en cada keypress
+                              decoration: InputDecoration(
+                                hintText: '••••••••',
+                                hintStyle: const TextStyle(
+                                    color: Color(0xFF9CA3AF), fontSize: 14),
+                                prefixIcon: const Icon(Icons.lock_outline,
+                                    color: Color(0xFF9CA3AF), size: 20),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscureText
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color: const Color(0xFF9CA3AF),
+                                    size: 20,
+                                  ),
+                                  onPressed: () => setState(
+                                      () => _obscureText = !_obscureText),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF9FAFB),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 14, horizontal: 16),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                        color: Color(0xFFD1D5DB))),
+                                enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                        color: Color(0xFFD1D5DB))),
+                                focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                        color: role.primary, width: 2)),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              role.description,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: const Color(0xFF6B7280),
+                            const SizedBox(height: 24),
+
+                            // ── Submit Button ────────────────────────────
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton(
+                                onPressed:
+                                    isLoading ? null : _handleLogin,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: role.primary,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(12)),
+                                ),
+                                child: isLoading
+                                    ? const SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2))
+                                    : const Text('Iniciar Sesión',
+                                        style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600)),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Error message
-                      if (authState.error != null)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEF2F2),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFFCA5A5)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  authState.error!,
-                                  style: const TextStyle(color: Color(0xFFB91C1C), fontSize: 13),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      // Inputs
-                      Text('Usuario', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF374151))),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _usuarioController,
-                        onChanged: (_) => ref.read(authProvider.notifier).clearError(),
-                        decoration: InputDecoration(
-                          hintText: 'Ingresa tu usuario',
-                          hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
-                          prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF9CA3AF), size: 20),
-                          filled: true,
-                          fillColor: const Color(0xFFF9FAFB),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD1D5DB))),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD1D5DB))),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: role.primary, width: 2)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      Text('Contraseña', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF374151))),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: _obscureText,
-                        onChanged: (_) => ref.read(authProvider.notifier).clearError(),
-                        decoration: InputDecoration(
-                          hintText: '••••••••',
-                          hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
-                          prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF9CA3AF), size: 20),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: const Color(0xFF9CA3AF), size: 20),
-                            onPressed: () => setState(() => _obscureText = !_obscureText),
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xFFF9FAFB),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD1D5DB))),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD1D5DB))),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: role.primary, width: 2)),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Submit Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: authState.isLoading ? null : _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: role.primary,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: authState.isLoading
-                              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : const Text('Iniciar Sesión', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),
