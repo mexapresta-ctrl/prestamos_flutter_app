@@ -36,6 +36,14 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
+      - name: Cache Build Outputs
+        uses: actions/cache@v4
+        with:
+          path: build/app/outputs/repo
+          key: ${{ runner.os }}-build-outputs-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-outputs-
+
       - name: Build APK (Split by ABI for smaller size)
         run: flutter build apk --release --split-per-abi
 
