@@ -186,15 +186,30 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
         width: 64,
         margin: const EdgeInsets.only(top: 30),
         child: FloatingActionButton(
+          heroTag: 'cobrador_fab',
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Nuevo cobro manual próximamente')),
+            final data = ref.read(cobradorProvider).value;
+            if (data == null || data.prestamos.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('No hay clientes asignados')),
+              );
+              return;
+            }
+            // Find first pending client
+            final pendiente = data.prestamos.firstWhere(
+              (p) => !data.cobrosHoy.any((c) => c.prestamoId == p.id),
+              orElse: () => data.prestamos.first,
             );
+            final cliente = data.clientes.firstWhere(
+              (c) => c.id.toString() == pendiente.clienteId.toString(),
+              orElse: () => ClienteModel(id: '', nombre: 'Desconocido'),
+            );
+            _showCobroModal(pendiente, cliente, data.tiposPago);
           },
           backgroundColor: AppColors.cobrador,
           elevation: 4,
           shape: const CircleBorder(),
-          child: const Icon(Icons.add, color: Colors.white, size: 32),
+          child: const Icon(Icons.attach_money, color: Colors.white, size: 32),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -348,6 +363,7 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                               icon: Icons.payments_rounded,
                               iconColor: AppColors.cobrador,
                               bgColor: AppColors.cobradorSurface,
+                              onTap: () => setState(() => _currentIndex = 3),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -358,6 +374,7 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                               icon: Icons.check_circle_rounded,
                               iconColor: AppColors.ok,
                               bgColor: AppColors.okSurface,
+                              onTap: () => setState(() => _currentIndex = 3),
                             ),
                           ),
                         ],
@@ -372,6 +389,7 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                               icon: Icons.hourglass_empty_rounded,
                               iconColor: AppColors.warn,
                               bgColor: AppColors.warnSurface,
+                              onTap: () => setState(() => _currentIndex = 1),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -382,6 +400,7 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                               icon: Icons.group_rounded,
                               iconColor: AppColors.info,
                               bgColor: AppColors.infoSurface,
+                              onTap: () => setState(() => _currentIndex = 1),
                             ),
                           ),
                         ],
@@ -751,39 +770,43 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
     required IconData icon,
     required Color iconColor,
     required Color bgColor,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: iconColor, size: 18),
             ),
-            child: Icon(icon, color: iconColor, size: 18),
-          ),
-          const SizedBox(height: 10),
-          Text(title,
-              style: const TextStyle(
-                  color: AppColors.ink4,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5)),
-          const SizedBox(height: 4),
-          Text(value,
-              style: const TextStyle(
-                  color: AppColors.ink,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800)),
-        ],
+            const SizedBox(height: 10),
+            Text(title,
+                style: const TextStyle(
+                    color: AppColors.ink4,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5)),
+            const SizedBox(height: 4),
+            Text(value,
+                style: const TextStyle(
+                    color: AppColors.ink,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800)),
+          ],
+        ),
       ),
     );
   }

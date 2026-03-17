@@ -41,15 +41,14 @@ class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
         width: 64,
         margin: const EdgeInsets.only(top: 30),
         child: FloatingActionButton(
+          heroTag: 'asesor_fab',
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Nuevo trámite próximamente')),
-            );
+            setState(() => _currentIndex = 1);
           },
           backgroundColor: AppColors.asesor,
           elevation: 4,
           shape: const CircleBorder(),
-          child: const Icon(Icons.add, color: Colors.white, size: 32),
+          child: const Icon(Icons.person_add, color: Colors.white, size: 32),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -202,6 +201,7 @@ class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
                             icon: Icons.group_rounded,
                             iconColor: AppColors.asesor,
                             bgColor: AppColors.asesorSurface,
+                            onTap: () => setState(() => _currentIndex = 1),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -212,6 +212,7 @@ class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
                             icon: Icons.check_circle_rounded,
                             iconColor: AppColors.ok,
                             bgColor: AppColors.okSurface,
+                            onTap: () => setState(() => _currentIndex = 3),
                           ),
                         ),
                       ],
@@ -226,6 +227,7 @@ class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
                             icon: Icons.hourglass_empty_rounded,
                             iconColor: AppColors.warn,
                             bgColor: AppColors.warnSurface,
+                            onTap: () => setState(() => _currentIndex = 3),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -236,6 +238,7 @@ class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
                             icon: Icons.description_rounded,
                             iconColor: AppColors.info,
                             bgColor: AppColors.infoSurface,
+                            onTap: () => setState(() => _currentIndex = 3),
                           ),
                         ),
                       ],
@@ -640,39 +643,43 @@ class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
     required IconData icon,
     required Color iconColor,
     required Color bgColor,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: iconColor, size: 18),
             ),
-            child: Icon(icon, color: iconColor, size: 18),
-          ),
-          const SizedBox(height: 10),
-          Text(title,
-              style: const TextStyle(
-                  color: AppColors.ink4,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5)),
-          const SizedBox(height: 4),
-          Text(value,
-              style: const TextStyle(
-                  color: AppColors.ink,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800)),
-        ],
+            const SizedBox(height: 10),
+            Text(title,
+                style: const TextStyle(
+                    color: AppColors.ink4,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5)),
+            const SizedBox(height: 4),
+            Text(value,
+                style: const TextStyle(
+                    color: AppColors.ink,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800)),
+          ],
+        ),
       ),
     );
   }
