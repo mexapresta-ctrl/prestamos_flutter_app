@@ -129,6 +129,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     
     if (!mounted) return;
 
+    // Wait for the update provider to finish (with a timeout)
+    AppUpdateInfo? updateInfo;
+    try {
+      updateInfo = await ref.read(updateProvider.future).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => AppUpdateInfo(isUpdateRequired: false),
+      );
+    } catch (_) {
+      updateInfo = AppUpdateInfo(isUpdateRequired: false);
+    }
+
+    if (!mounted) return;
+
     // Trigger exit animation
     setState(() {
       _isExiting = true;
@@ -137,30 +150,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     if (!mounted) return;
 
-    // Determine route based on update provider state
-    // To ensure we get the latest state after the minimum wait
-    final updateState = ref.read(updateProvider);
-    
-    updateState.when(
-      loading: () {
-        // Should not strictly happen if init is fast, but handle just in case
-        _navigateToLogin(); 
-      },
-      error: (err, stack) => _navigateToLogin(),
-      data: (info) {
-        if (info.isUpdateRequired && info.updateUrl != null) {
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (_, _, _) => UpdateScreen(appUrl: info.updateUrl!),
-              transitionDuration: const Duration(milliseconds: 600),
-              transitionsBuilder: (_, anim, _, child) => FadeTransition(opacity: anim, child: child),
-            ),
-          );
-        } else {
-          _navigateToLogin();
-        }
-      },
-    );
+    if (updateInfo.isUpdateRequired && updateInfo.updateUrl != null) {
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (_, _, _) => UpdateScreen(appUrl: updateInfo!.updateUrl!),
+          transitionDuration: const Duration(milliseconds: 600),
+          transitionsBuilder: (_, anim, _, child) => FadeTransition(opacity: anim, child: child),
+        ),
+      );
+    } else {
+      _navigateToLogin();
+    }
   }
 
   void _navigateToLogin() {
