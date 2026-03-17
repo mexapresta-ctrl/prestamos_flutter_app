@@ -87,6 +87,7 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
         });
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al abrir cámara: $e')));
     }
   }
@@ -164,16 +165,14 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
       });
 
       // 4. Actualizar estado y cerrar
+      if (!mounted) return;
       ref.read(adminProvider.notifier).refresh();
 
-      if (mounted) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cliente guardado exitosamente'), backgroundColor: AppColors.ok));
-      }
+      Navigator.pop(context, true);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cliente guardado exitosamente'), backgroundColor: AppColors.ok));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al guardar cliente: $e'), backgroundColor: AppColors.error));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al guardar cliente: $e'), backgroundColor: AppColors.error));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -252,7 +251,7 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
                   CustomInput(controller: _apeMatCtrl, label: 'Apellido Materno'),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: _sexo,
+                    initialValue: _sexo,
                     decoration: InputDecoration(labelText: 'Sexo', filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border))),
                     items: const [DropdownMenuItem(value: 'Hombre', child: Text('Hombre')), DropdownMenuItem(value: 'Mujer', child: Text('Mujer'))],
                     onChanged: (val) => setState(() => _sexo = val),

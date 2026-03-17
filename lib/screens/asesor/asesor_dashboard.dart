@@ -22,8 +22,6 @@ class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final user = authState.user;
     final asesorState = ref.watch(asesorProvider);
 
     return Scaffold(
@@ -45,7 +43,7 @@ class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Hola, \${user?.nombre?.split(" ")[0] ?? "Asesor"}',
+                              'Hola, \${ref.watch(authProvider).user?.nombre?.split(" ")[0] ?? "Asesor"}',
                               style: AppTypography.headingPrincipal,
                             ),
                             Text(
@@ -58,7 +56,7 @@ class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: AppColors.asesor.withOpacity(0.1),
+                            color: AppColors.asesor.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(

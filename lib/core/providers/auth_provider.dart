@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/supabase_config.dart';
 import '../models/user_model.dart';
@@ -64,7 +65,7 @@ class AuthNotifier extends Notifier<AuthState> {
         return false;
       }
     } catch (e) {
-      print('LOGIN EXCEPTION: $e');
+      debugPrint('LOGIN EXCEPTION: $e');
       state = state.copyWith(
         isLoading: false, 
         error: e.toString()

@@ -27,7 +27,7 @@ class AdminSettingsView extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundColor: AppColors.admin.withOpacity(0.1),
+                    backgroundColor: AppColors.admin.withValues(alpha: 0.1),
                     child: const Icon(Icons.admin_panel_settings, size: 50, color: AppColors.admin),
                   ),
                   const SizedBox(height: 16),
