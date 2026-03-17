@@ -61,7 +61,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   /// Opens a bottom sheet to select a client and register a payment
   void _showRegistrarPago(BuildContext context) {
     final adminState = ref.read(adminProvider);
-    final data = adminState.valueOrNull;
+    final data = adminState.value;
     if (data == null) return;
 
     final formatCurrency = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
@@ -145,7 +145,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
                               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
                             ),
-                            items: prestamosCliente.map((p) => DropdownMenuItem(
+                            items: prestamosCliente.map<DropdownMenuItem<String>>((p) => DropdownMenuItem(
                               value: p.id,
                               child: Text('${p.codigo ?? p.id.substring(0, 8)} · ${formatCurrency.format(p.cuotaSemanal)}/sem'),
                             )).toList(),

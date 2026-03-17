@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 import '../../../core/providers/admin_provider.dart';
-import '../../../core/models/prestamo_model.dart';
+
 import '../../../widgets/list_card.dart';
 import '../../../widgets/hero_card.dart' show Role;
 import 'admin_prestamo_detalle_view.dart';
