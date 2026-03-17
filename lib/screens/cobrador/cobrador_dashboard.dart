@@ -475,7 +475,7 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                   }
                   return ListView.separated(
                     itemCount: data.cobrosHoy.length,
-                    separatorBuilder: (_, _a) => const SizedBox(height: 10),
+                    separatorBuilder: (context, i) => const SizedBox(height: 10),
                     padding: const EdgeInsets.only(bottom: 100),
                     itemBuilder: (context, i) {
                       final cobro = data.cobrosHoy[i];
