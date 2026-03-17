@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/cobrador_provider.dart';
 import '../../core/models/prestamo_model.dart';
@@ -7,11 +8,6 @@ import '../../core/models/cliente_model.dart';
 import '../../core/models/tipo_pago_model.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
-import '../../widgets/hero_card.dart';
-import '../../widgets/stat_card.dart';
-import '../../widgets/progress_bar.dart';
-import '../../widgets/list_card.dart';
-import '../../widgets/role_chip.dart';
 import '../../widgets/confirm_modal.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_input.dart';
@@ -24,15 +20,14 @@ class CobradorDashboard extends ConsumerStatefulWidget {
 }
 
 class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
-  // Modal state
+  int _currentIndex = 0;
   TipoPagoModel? _selectedTipoPago;
   final TextEditingController _montoController = TextEditingController();
 
   void _showCobroModal(
       PrestamoModel prestamo, ClienteModel cliente, List<TipoPagoModel> tiposPago) {
     if (tiposPago.isEmpty) return;
-    
-    // Set defaults
+
     setState(() {
       _selectedTipoPago = tiposPago.first;
       _montoController.text = prestamo.cuotaSemanal.toStringAsFixed(2);
@@ -56,7 +51,7 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
               onConfirm: () async {
                 final amount = num.tryParse(_montoController.text);
                 if (amount == null || amount <= 0) return;
-                
+
                 try {
                   await ref.read(cobradorProvider.notifier).ejecutarCobro(
                         prestamo: prestamo,
@@ -100,8 +95,8 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                 children: [
                   const Text('TIPO DE PAGO',
                       style: TextStyle(
-                          fontSize: 9, 
-                          fontWeight: FontWeight.w700, 
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
                           letterSpacing: 1.5,
                           color: AppColors.ink4)),
                   const SizedBox(height: 6),
@@ -123,10 +118,12 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                           color: AppColors.ink,
                           fontFamily: 'Plus Jakarta Sans',
                         ),
-                        items: tiposPago.map((tp) => DropdownMenuItem(
-                          value: tp,
-                          child: Text(tp.nombre),
-                        )).toList(),
+                        items: tiposPago
+                            .map((tp) => DropdownMenuItem(
+                                  value: tp,
+                                  child: Text(tp.nombre),
+                                ))
+                            .toList(),
                         onChanged: (val) {
                           if (val != null) {
                             setModalState(() => _selectedTipoPago = val);
@@ -138,8 +135,8 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                   const SizedBox(height: 14),
                   const Text('MONTO',
                       style: TextStyle(
-                          fontSize: 9, 
-                          fontWeight: FontWeight.w700, 
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
                           letterSpacing: 1.5,
                           color: AppColors.ink4)),
                   const SizedBox(height: 6),
@@ -149,18 +146,18 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                     controller: _montoController,
                     prefix: const Padding(
                       padding: EdgeInsets.only(left: 14, right: 8, top: 14),
-                      child: Text('\$', style: TextStyle(
-                        fontFamily: 'Fraunces', 
-                        fontSize: 18, 
-                        fontWeight: FontWeight.w600, 
-                        color: AppColors.ink3
-                      )),
+                      child: Text('\$',
+                          style: TextStyle(
+                              fontFamily: 'Fraunces',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.ink3)),
                     ),
                   ),
                 ],
               ),
             );
-          }
+          },
         );
       },
     );
@@ -170,228 +167,723 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
     final cobradorState = ref.watch(cobradorProvider);
+    final formatCurrency = NumberFormat.simpleCurrency();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            await ref.read(cobradorProvider.notifier).refresh();
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          _buildHomeView(cobradorState, user, formatCurrency),
+          _buildRutaView(cobradorState),
+          const SizedBox(), // FAB
+          _buildBitacoraView(cobradorState, formatCurrency),
+          _buildPerfilView(user),
+        ],
+      ),
+      floatingActionButton: Container(
+        height: 64,
+        width: 64,
+        margin: const EdgeInsets.only(top: 30),
+        child: FloatingActionButton(
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Nuevo cobro manual próximamente')),
+            );
           },
-          child: cobradorState.when(
-            loading: () => const Center(child: CircularProgressIndicator(color: AppColors.cobrador)),
-            error: (err, stack) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.error))),
-            data: (data) {
-              final nombreCorto = user?.nombre.split(' ').first ?? 'Usuario';
-              final pendientes = data.prestamos.length - data.cobrosHoy.length;
-
-              return SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Ruta Hoy',
-                              style: AppTypography.headingPrincipal,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Hola, $nombreCorto',
-                              style: AppTypography.subtext,
-                            ),
-                          ],
-                        ),
-                        const RoleChip(
-                          role: Role.cobrador,
-                          text: 'Cobrador',
-                          icon: Icons.directions_walk_rounded, 
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Hero Meta
-                    HeroCard(
-                      role: Role.cobrador,
-                      label: 'Meta de Cobro',
-                      amount: data.metaDiaria.toStringAsFixed(2),
-                      tags: ['${(data.porcentajeMeta * 100).toStringAsFixed(1)}% cobrado'],
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Progreso
-                    ProgressBar(
-                      role: Role.cobrador,
-                      label: 'Progreso del día',
-                      percentage: data.porcentajeMeta,
-                      subtext: '\$${data.cobradoHoy.toStringAsFixed(2)} de \$${data.metaDiaria.toStringAsFixed(2)}',
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Stats Grid
-                    Row(
-                      children: [
-                        Expanded(
-                          child: StatCard(
-                            role: Role.cobrador,
-                            label: 'Cobros realizados',
-                            value: data.cobrosHoy.length.toString(),
-                            trendText: 'Registrados hoy',
-                            isUp: true,
-                            icon: const Icon(Icons.check_circle_outline, color: AppColors.cobrador, size: 20),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: StatCard(
-                            role: Role.cobrador,
-                            label: 'Pendientes',
-                            value: pendientes.toString(),
-                            trendText: 'De ruta total',
-                            isUp: pendientes > 0 ? false : true, // Just as a UI indicator that 0 = good
-                            icon: const Icon(Icons.people_outline, color: AppColors.cobrador, size: 20),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-
-                    Text(
-                      'Ruta Total',
-                      style: AppTypography.cardTitle.copyWith(fontSize: 16, color: AppColors.ink),
-                    ),
-                    const SizedBox(height: 16),
-
-                    if (data.prestamos.isEmpty)
-                      const Center(
-                        child: Text(
-                          'No hay préstamos asignados a tu ruta.',
-                          style: TextStyle(color: AppColors.ink4),
-                        ),
-                      )
-                    else
-                      ...data.prestamos.map((prestamo) {
-                        final cliente = data.clientes.firstWhere(
-                          (c) => c.id.toString() == prestamo.clienteId.toString(), 
-                          orElse: () => ClienteModel(id: '', nombre: 'Desconocido', telefono: '')
-                        );
-                        
-                        // Determinar si ya se cobró hoy
-                        final yaCobrado = data.cobrosHoy.any((c) => c.prestamoId == prestamo.id);
-
-                        return InkWell(
-                          onTap: yaCobrado ? null : () => _showCobroModal(prestamo, cliente, data.tiposPago),
-                          child: ListCard(
-                            role: Role.cobrador,
-                            title: cliente.nombre,
-                            subtitle: 'Cr. ${prestamo.codigo ?? '#${prestamo.id}'} · ${yaCobrado ? 'Cobrado' : 'Pendiente'}',
-                            amount: '\$${prestamo.cuotaSemanal.toStringAsFixed(0)}',
-                            badge: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: yaCobrado ? AppColors.okSurface : AppColors.infoSurface,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                yaCobrado ? 'Ok' : 'Pen', 
-                                style: TextStyle(
-                                  color: yaCobrado ? AppColors.ok : AppColors.info, 
-                                  fontSize: 10, 
-                                  fontWeight: FontWeight.bold
-                                )
-                              ),
-                            ),
-                            icon: Icon(
-                              yaCobrado ? Icons.check_circle : Icons.person, 
-                              color: yaCobrado ? AppColors.ok : AppColors.cobrador, 
-                              size: 22
-                            ),
-                          ),
-                        );
-                      }),
-                  ],
-                ),
-              );
-            },
-          ),
+          backgroundColor: AppColors.cobrador,
+          elevation: 4,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add, color: Colors.white, size: 32),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: AppColors.border)),
+  // ── HOME VIEW ─────────────────────────────────────────────────────────────
+
+  Widget _buildHomeView(AsyncValue<CobradorState> cobradorState,
+      dynamic user, NumberFormat formatCurrency) {
+    return SafeArea(
+      child: RefreshIndicator(
+        color: AppColors.cobrador,
+        onRefresh: () async => ref.read(cobradorProvider.notifier).refresh(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user?.nombre ?? 'Cobrador',
+                        style: AppTypography.headingPrincipal.copyWith(fontSize: 20),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Cobrador',
+                        style: const TextStyle(
+                          color: AppColors.cobrador,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'MexaPresta',
+                        style: AppTypography.headingPrincipal.copyWith(
+                          fontSize: 18,
+                          color: AppColors.cobrador,
+                        ),
+                      ),
+                      const Text(
+                        'Tu dinero al instante',
+                        style: TextStyle(
+                            color: AppColors.ink4,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              cobradorState.when(
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(40),
+                    child: CircularProgressIndicator(color: AppColors.cobrador),
+                  ),
+                ),
+                error: (err, _) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Text('Error: $err',
+                        style: const TextStyle(color: AppColors.error)),
+                  ),
+                ),
+                data: (data) {
+                  final pendientes = data.prestamos.length - data.cobrosHoy.length;
+                  final pct = data.porcentajeMeta;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Barra de progreso del día
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: AppColors.cobradorGradient,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Meta del Día',
+                                    style: TextStyle(
+                                        color: Colors.white70,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13)),
+                                Text(
+                                  '${(pct * 100).toStringAsFixed(0)}%',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 22),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              formatCurrency.format(data.cobradoHoy),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900),
+                            ),
+                            Text(
+                              'de ${formatCurrency.format(data.metaDiaria)}',
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 13),
+                            ),
+                            const SizedBox(height: 14),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: LinearProgressIndicator(
+                                value: pct.clamp(0.0, 1.0),
+                                backgroundColor: Colors.white24,
+                                color: Colors.white,
+                                minHeight: 8,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 4 Tarjetas
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              title: 'COBRADO HOY',
+                              value: formatCurrency.format(data.cobradoHoy),
+                              icon: Icons.payments_rounded,
+                              iconColor: AppColors.cobrador,
+                              bgColor: AppColors.cobradorSurface,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              title: 'COBROS',
+                              value: data.cobrosHoy.length.toString(),
+                              icon: Icons.check_circle_rounded,
+                              iconColor: AppColors.ok,
+                              bgColor: AppColors.okSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              title: 'PENDIENTES',
+                              value: pendientes.toString(),
+                              icon: Icons.hourglass_empty_rounded,
+                              iconColor: AppColors.warn,
+                              bgColor: AppColors.warnSurface,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              title: 'CLIENTES',
+                              value: data.clientes.length.toString(),
+                              icon: Icons.group_rounded,
+                              iconColor: AppColors.info,
+                              bgColor: AppColors.infoSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Lista de Ruta (primeros 5)
+                      Text('Ruta de Hoy',
+                          style: AppTypography.headingPrincipal.copyWith(fontSize: 18)),
+                      const SizedBox(height: 16),
+                      _buildRutaList(data, compact: true),
+                      const SizedBox(height: 100),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(icon: Icons.home, label: 'Inicio', isActive: true),
-          _buildNavItem(icon: Icons.map, label: 'Mapa', isActive: false),
-          // FAB placeholder
-          Container(
-            width: 50,
-            height: 50,
-            margin: const EdgeInsets.only(bottom: 20),
+    );
+  }
+
+  // ── RUTA VIEW ─────────────────────────────────────────────────────────────
+
+  Widget _buildRutaView(AsyncValue<CobradorState> state) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Ruta Completa', style: AppTypography.headingPrincipal),
+            const SizedBox(height: 4),
+            const Text('Todos tus clientes asignados',
+                style: TextStyle(color: AppColors.ink3)),
+            const SizedBox(height: 20),
+            Expanded(
+              child: state.when(
+                loading: () => const Center(
+                    child: CircularProgressIndicator(color: AppColors.cobrador)),
+                error: (err, _) => Center(
+                    child: Text('Error: $err',
+                        style: const TextStyle(color: AppColors.error))),
+                data: (data) => RefreshIndicator(
+                  color: AppColors.cobrador,
+                  onRefresh: () async =>
+                      ref.read(cobradorProvider.notifier).refresh(),
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      _buildRutaList(data, compact: false),
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── BITACORA VIEW ─────────────────────────────────────────────────────────
+
+  Widget _buildBitacoraView(AsyncValue<CobradorState> state, NumberFormat formatCurrency) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Bitácora', style: AppTypography.headingPrincipal),
+            const SizedBox(height: 4),
+            const Text('Registro de cobros del día',
+                style: TextStyle(color: AppColors.ink3)),
+            const SizedBox(height: 20),
+            Expanded(
+              child: state.when(
+                loading: () => const Center(
+                    child: CircularProgressIndicator(color: AppColors.cobrador)),
+                error: (err, _) => Center(
+                    child: Text('Error: $err',
+                        style: const TextStyle(color: AppColors.error))),
+                data: (data) {
+                  if (data.cobrosHoy.isEmpty) {
+                    return const Center(
+                        child: Text('No hay cobros registrados hoy.',
+                            style: TextStyle(color: AppColors.ink4)));
+                  }
+                  return ListView.separated(
+                    itemCount: data.cobrosHoy.length,
+                    separatorBuilder: (_, _a) => const SizedBox(height: 10),
+                    padding: const EdgeInsets.only(bottom: 100),
+                    itemBuilder: (context, i) {
+                      final cobro = data.cobrosHoy[i];
+                      final cliente = data.clientes.firstWhere(
+                        (c) => c.id == cobro.clienteId,
+                        orElse: () => ClienteModel(id: '', nombre: 'Desconocido'),
+                      );
+                      return Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: const BoxDecoration(
+                                color: AppColors.cobradorSurface,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.check_rounded,
+                                  color: AppColors.cobrador, size: 20),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(cliente.nombre,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                          color: AppColors.ink)),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    cobro.fechaCobro?.substring(0, 10) ?? 'Hoy',
+                                    style: const TextStyle(
+                                        color: AppColors.ink4, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              formatCurrency.format(cobro.monto),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                  color: AppColors.cobrador),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── PERFIL VIEW ───────────────────────────────────────────────────────────
+
+  Widget _buildPerfilView(dynamic user) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Mi Perfil', style: AppTypography.headingPrincipal),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: AppColors.cobrador.withValues(alpha: 0.1),
+                    child: const Icon(Icons.person_rounded,
+                        size: 30, color: AppColors.cobrador),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.nombre ?? 'Cobrador',
+                          style: AppTypography.headingPrincipal.copyWith(fontSize: 16),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user?.usuario ?? '@cobrador',
+                          style: const TextStyle(
+                              color: AppColors.ink3, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.cobradorSurface,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text('Cobrador',
+                        style: TextStyle(
+                            color: AppColors.cobrador,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            Expanded(
+              child: ListView(
+                children: [
+                  _buildPerfilItem(
+                    icon: Icons.monetization_on_outlined,
+                    label: 'Mis Cobros',
+                    onTap: () => setState(() => _currentIndex = 3),
+                  ),
+                  _buildPerfilItem(
+                    icon: Icons.route_outlined,
+                    label: 'Mi Ruta',
+                    onTap: () => setState(() => _currentIndex = 1),
+                  ),
+                  _buildPerfilItem(
+                    icon: Icons.cloud_download_outlined,
+                    label: 'Buscar Actualizaciones',
+                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Comprobando actualizaciones...'))),
+                  ),
+                  const SizedBox(height: 32),
+                  CustomButton(
+                    type: ButtonType.secondary,
+                    text: 'Cerrar Sesión',
+                    icon: Icons.logout,
+                    onPressed: () => ref.read(authProvider.notifier).logout(),
+                  ),
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── HELPERS ───────────────────────────────────────────────────────────────
+
+  Widget _buildRutaList(CobradorState data, {required bool compact}) {
+    final prestamos = compact ? data.prestamos.take(5).toList() : data.prestamos;
+    if (prestamos.isEmpty) {
+      return const Center(
+        child: Text('No tienes clientes asignados hoy.',
+            style: TextStyle(color: AppColors.ink4)),
+      );
+    }
+    return Column(
+      children: prestamos.map((prestamo) {
+        final cliente = data.clientes.firstWhere(
+          (c) => c.id.toString() == prestamo.clienteId.toString(),
+          orElse: () => ClienteModel(id: '', nombre: 'Desconocido'),
+        );
+        final yaCobrado = data.cobrosHoy.any((c) => c.prestamoId == prestamo.id);
+
+        return GestureDetector(
+          onTap: yaCobrado
+              ? null
+              : () => _showCobroModal(prestamo, cliente, data.tiposPago),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              gradient: AppColors.cobradorGradient,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x660A7C5C),
-                  blurRadius: 14,
-                  offset: Offset(0, 4),
-                )
+              border: Border.all(
+                color: yaCobrado ? AppColors.cobrador.withValues(alpha: 0.4) : AppColors.border,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: yaCobrado ? AppColors.cobradorSurface : AppColors.background,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    yaCobrado ? Icons.check_circle : Icons.person,
+                    color: yaCobrado ? AppColors.cobrador : AppColors.ink4,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(cliente.nombre,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: AppColors.ink)),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Cr. ${prestamo.codigo ?? '#${prestamo.id}'} · ${yaCobrado ? 'Cobrado ✓' : 'Pendiente'}',
+                        style: TextStyle(
+                          color: yaCobrado ? AppColors.cobrador : AppColors.ink4,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '\$${prestamo.cuotaSemanal.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: AppColors.ink),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: yaCobrado
+                            ? AppColors.cobradorSurface
+                            : AppColors.infoSurface,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        yaCobrado ? 'Ok' : 'Pen',
+                        style: TextStyle(
+                          color: yaCobrado ? AppColors.cobrador : AppColors.info,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-            child: const Icon(Icons.qr_code_scanner, color: Colors.white, size: 24),
           ),
-          _buildNavItem(icon: Icons.route, label: 'Ruta', isActive: false),
-          _buildNavItem(icon: Icons.person, label: 'Perfil', isActive: false),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildStatCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color iconColor,
+    required Color bgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: iconColor, size: 18),
+          ),
+          const SizedBox(height: 10),
+          Text(title,
+              style: const TextStyle(
+                  color: AppColors.ink4,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5)),
+          const SizedBox(height: 4),
+          Text(value,
+              style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800)),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem({required IconData icon, required String label, required bool isActive}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.cobradorSurface : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            color: isActive ? AppColors.cobrador : AppColors.ink4,
-            size: 24,
-          ),
+  Widget _buildPerfilItem(
+      {required IconData icon,
+      required String label,
+      required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
         ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: isActive ? AppColors.cobrador : AppColors.ink4,
-          ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: AppColors.ink2, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+                child: Text(label,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.ink,
+                        fontSize: 15))),
+            const Icon(Icons.chevron_right, color: AppColors.ink4),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  // ── BOTTOM NAV ────────────────────────────────────────────────────────────
+
+  Widget _buildBottomNav() {
+    return BottomAppBar(
+      color: Colors.white,
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 8.0,
+      elevation: 10,
+      child: Container(
+        height: 60,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                _buildNavItem(icon: Icons.home_rounded, label: 'Inicio', index: 0),
+                const SizedBox(width: 32),
+                _buildNavItem(icon: Icons.route_rounded, label: 'Ruta', index: 1),
+              ],
+            ),
+            Row(
+              children: [
+                _buildNavItem(icon: Icons.assignment_rounded, label: 'Bitácora', index: 3),
+                const SizedBox(width: 32),
+                _buildNavItem(icon: Icons.person_rounded, label: 'Mi Perfil', index: 4),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+      {required IconData icon, required String label, required int index}) {
+    final isActive = _currentIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon,
+              color: isActive ? AppColors.cobrador : AppColors.ink4, size: 26),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: isActive ? AppColors.cobrador : AppColors.ink4,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
-
