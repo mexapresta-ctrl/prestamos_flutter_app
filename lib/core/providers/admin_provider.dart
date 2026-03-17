@@ -14,6 +14,7 @@ class AdminDashboardData {
   final double carteraTotal;
   final double cobradoHoy;
   final int enMora;
+  final double montoEnMora;
   final int porAprobar;
 
   AdminDashboardData({
@@ -24,6 +25,7 @@ class AdminDashboardData {
     required this.carteraTotal,
     required this.cobradoHoy,
     required this.enMora,
+    required this.montoEnMora,
     required this.porAprobar,
   });
 }
@@ -91,7 +93,9 @@ class AdminNotifier extends AsyncNotifier<AdminDashboardData> {
           .fold(0.0, (sum, c) => sum + c.monto);
 
       // En mora (vencidos)
-      final enMora = prestamos.where((p) => p.estado == 'vencido').length;
+      final prestamosMora = prestamos.where((p) => p.estado == 'vencido');
+      final enMora = prestamosMora.length;
+      final montoEnMora = prestamosMora.fold(0.0, (sum, p) => sum + (p.cuotaSemanal * p.cuotasTotales));
 
       // Por Aprobar (solicitado)
       final porAprobar = prestamos.where((p) => p.estado == 'solicitado').length;
@@ -104,6 +108,7 @@ class AdminNotifier extends AsyncNotifier<AdminDashboardData> {
         carteraTotal: carteraTotal,
         cobradoHoy: cobradoHoy,
         enMora: enMora,
+        montoEnMora: montoEnMora,
         porAprobar: porAprobar,
       );
     } catch (e) {

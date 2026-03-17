@@ -10,7 +10,7 @@ class AdminSettingsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authProvider);
+    final user = ref.watch(authProvider).user;
 
     return SafeArea(
       child: Padding(
@@ -18,71 +18,118 @@ class AdminSettingsView extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Configuración', style: AppTypography.headingPrincipal),
-            const SizedBox(height: 32),
+            Text('Mi Perfil', style: AppTypography.headingPrincipal),
+            const SizedBox(height: 24),
             
-            // Perfil
-            Center(
-              child: Column(
+            // Perfil Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 50,
+                   CircleAvatar(
+                    radius: 30,
                     backgroundColor: AppColors.admin.withValues(alpha: 0.1),
-                    child: const Icon(Icons.admin_panel_settings, size: 50, color: AppColors.admin),
+                    child: const Icon(Icons.person_rounded, size: 30, color: AppColors.admin),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user.user?.nombre ?? 'Administrador',
-                    style: AppTypography.headingPrincipal.copyWith(fontSize: 18),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.nombre ?? 'Administrador',
+                          style: AppTypography.headingPrincipal.copyWith(fontSize: 16),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user?.usuario ?? '@admin',
+                          style: const TextStyle(color: AppColors.ink3, fontSize: 13),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user.user?.rol.toUpperCase() ?? 'ADMIN',
-                    style: const TextStyle(color: AppColors.ink3),
+                  TextButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ver perfil próximamente')));
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.admin,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    child: const Text('Ver perfil', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
             ),
             
-            const SizedBox(height: 40),
+            const SizedBox(height: 32),
             
-            Text('Opciones de la Cuenta', style: AppTypography.headingPrincipal.copyWith(fontSize: 16)),
-            const SizedBox(height: 16),
-            
-            _buildActionCard(
-              icon: Icons.person_outline,
-              label: 'Editar Perfil',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
-              },
+            Expanded(
+              child: ListView(
+                children: [
+                  _buildActionCard(
+                    icon: Icons.monetization_on_outlined,
+                    label: 'Préstamos',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                    },
+                  ),
+                  _buildActionCard(
+                    icon: Icons.payments_outlined,
+                    label: 'Pagos',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                    },
+                  ),
+                  _buildActionCard(
+                    icon: Icons.calculate_outlined,
+                    label: 'Modalidades',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                    },
+                  ),
+                  _buildActionCard(
+                    icon: Icons.handshake_outlined,
+                    label: 'Prestamistas',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                    },
+                  ),
+                  _buildActionCard(
+                    icon: Icons.groups_outlined,
+                    label: 'Equipo',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                    },
+                  ),
+                  _buildActionCard(
+                    icon: Icons.fact_check_outlined,
+                    label: 'Auditoría',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                    },
+                  ),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // Logout
+                  CustomButton(
+                    type: ButtonType.secondary,
+                    text: 'Cerrar Sesión',
+                    icon: Icons.logout,
+                    onPressed: () {
+                       ref.read(authProvider.notifier).logout();
+                    },
+                  ),
+                  const SizedBox(height: 100), // padding for bottom nav
+                ],
+              ),
             ),
-            _buildActionCard(
-              icon: Icons.lock_outline,
-              label: 'Cambiar Contraseña',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
-              },
-            ),
-            _buildActionCard(
-              icon: Icons.cloud_download_outlined,
-              label: 'Buscar Actualizaciones',
-              onTap: () {
-                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Comprobando actualizaciones...')));
-              },
-            ),
-            
-            const Spacer(),
-            
-            // Logout
-            CustomButton(
-              type: ButtonType.secondary,
-              text: 'Cerrar Sesión',
-              icon: Icons.logout,
-              onPressed: () {
-                 ref.read(authProvider.notifier).logout();
-              },
-            ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -103,10 +150,17 @@ class AdminSettingsView extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.ink2, size: 24),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: AppColors.ink2, size: 20),
+            ),
             const SizedBox(width: 16),
-            Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink))),
-            const Icon(Icons.chevron_right, color: AppColors.ink3),
+            Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.ink, fontSize: 15))),
+            const Icon(Icons.chevron_right, color: AppColors.ink4),
           ],
         ),
       ),
