@@ -19,16 +19,27 @@ class _UpdateScreenState extends State<UpdateScreen> {
   bool _isDownloading = false;
   bool _done = false;
   double _progress = 0;
+  bool _progressKnown = false;
+  int _receivedBytes = 0;
   String _statusText = '¡Nueva Versión Disponible!';
   String _detailText =
       'MEXA PRESTA se ha actualizado para brindarte un mejor servicio. Es necesario descargar la última versión para continuar.';
   String? _localPath;
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    }
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
 
   Future<void> _startDownload() async {
     setState(() {
       _isDownloading = true;
       _done = false;
       _progress = 0;
+      _progressKnown = false;
+      _receivedBytes = 0;
       _statusText = 'Descargando Actualización...';
       _detailText = 'Por favor, no cierres esta pantalla hasta que se complete la descarga.';
     });
@@ -36,7 +47,6 @@ class _UpdateScreenState extends State<UpdateScreen> {
     try {
       if (!Platform.isAndroid) return;
 
-      // Save to external storage Downloads dir so FileProvider can access it
       final dir = await getExternalStorageDirectory();
       if (dir == null) throw Exception('No se pudo acceder al almacenamiento externo.');
 
@@ -47,11 +57,16 @@ class _UpdateScreenState extends State<UpdateScreen> {
         widget.appUrl,
         savePath,
         onReceiveProgress: (received, total) {
-          if (total > 0) {
-            setState(() {
+          setState(() {
+            _receivedBytes = received;
+            if (total > 0) {
+              _progressKnown = true;
               _progress = received / total;
-            });
-          }
+            } else {
+              // GitHub CDN no envía Content-Length — spinner indeterminado
+              _progressKnown = false;
+            }
+          });
         },
         options: Options(
           responseType: ResponseType.bytes,
@@ -65,17 +80,19 @@ class _UpdateScreenState extends State<UpdateScreen> {
         _isDownloading = false;
         _done = true;
         _progress = 1.0;
+        _progressKnown = true;
         _statusText = 'Descarga Completada';
-        _detailText = 'Toca el botón para instalar. Si Android solicita permiso para instalar apps desconocidas, acéptalo.';
+        _detailText =
+            'Toca el botón para instalar. Si Android solicita permiso para instalar apps desconocidas, acéptalo.';
       });
 
-      // Abrir instalador directamente
       await _installApk(savePath);
     } catch (e) {
       if (mounted) {
         setState(() {
           _statusText = 'Error en la Descarga';
-          _detailText = 'Ocurrió un error: $e\n\nVerifica tu conexión a internet e intenta nuevamente.';
+          _detailText =
+              'Ocurrió un error: $e\n\nVerifica tu conexión a internet e intenta nuevamente.';
           _isDownloading = false;
           _progress = 0;
         });
@@ -86,12 +103,14 @@ class _UpdateScreenState extends State<UpdateScreen> {
 
   Future<void> _installApk(String path) async {
     try {
-      final result = await OpenFilex.open(path, type: 'application/vnd.android.package-archive');
+      final result =
+          await OpenFilex.open(path, type: 'application/vnd.android.package-archive');
       if (result.type != ResultType.done) {
         if (mounted) {
           setState(() {
             _statusText = 'Lista para instalar';
-            _detailText = 'Toca "Instalar Ahora" para instalar manualmente la actualización.';
+            _detailText =
+                'Toca "Instalar Ahora" para instalar manualmente la actualización.';
           });
         }
       }
@@ -103,7 +122,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false, // Forzar actualización - no permitir salir
+      canPop: false,
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
@@ -136,22 +155,33 @@ class _UpdateScreenState extends State<UpdateScreen> {
                 ),
                 const SizedBox(height: 40),
 
+                // ── Descargando ───────────────────────────────────────────
                 if (_isDownloading) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: _progress,
-                      backgroundColor: AppColors.surface1,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.admin),
-                      minHeight: 14,
-                    ),
+                    child: _progressKnown
+                        ? LinearProgressIndicator(
+                            value: _progress,
+                            backgroundColor: AppColors.surface1,
+                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.admin),
+                            minHeight: 14,
+                          )
+                        : const LinearProgressIndicator(
+                            backgroundColor: AppColors.surface1,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.admin),
+                            minHeight: 14,
+                          ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '${(_progress * 100).toStringAsFixed(1)}%',
+                    _progressKnown
+                        ? '${(_progress * 100).toStringAsFixed(1)}%'
+                        : 'Descargando... ${_formatBytes(_receivedBytes)}',
                     style: AppTypography.label.copyWith(color: AppColors.admin),
                     textAlign: TextAlign.center,
                   ),
+
+                // ── Descarga lista ─────────────────────────────────────
                 ] else if (_done && _localPath != null) ...[
                   ElevatedButton.icon(
                     onPressed: () => _installApk(_localPath!),
@@ -161,19 +191,24 @@ class _UpdateScreenState extends State<UpdateScreen> {
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
+
+                // ── Botón inicial ──────────────────────────────────────
                 ] else ...[
                   ElevatedButton.icon(
                     onPressed: _startDownload,
                     icon: const Icon(Icons.download_rounded),
-                    label: const Text('Descargar e Instalar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    label: const Text('Descargar e Instalar',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.admin,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 ],
