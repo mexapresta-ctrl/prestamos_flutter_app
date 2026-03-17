@@ -26,16 +26,17 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Cache CMake and Native Builds
+      - name: Cache Android CMake and NDK
         uses: actions/cache@v4
         with:
           path: |
+            ${{ env.ANDROID_HOME }}/cmake
+            ${{ env.ANDROID_HOME }}/ndk
             android/.cxx
             build/app/intermediates/cxx
-            build/app/outputs/repo
-          key: ${{ runner.os }}-cmake-ndk-${{ hashFiles('**/CMakeLists.txt') }}
+          key: ${{ runner.os }}-android-cmake-ndk-3.22.1
           restore-keys: |
-            ${{ runner.os }}-cmake-ndk-
+            ${{ runner.os }}-android-cmake-ndk-
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
