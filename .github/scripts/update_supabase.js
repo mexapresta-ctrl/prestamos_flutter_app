@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
 const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-const runNumber = (process.env.RUN_NUMBER || '').trim();
+const version = (process.env.APP_VERSION || '').trim();
 const repository = (process.env.REPO || '').trim();
 
 if (!supabaseUrl || !supabaseKey) {
@@ -12,37 +12,42 @@ if (!supabaseUrl || !supabaseKey) {
   process.exit(1);
 }
 
+if (!version) {
+  console.error('ERROR: APP_VERSION no está configurado.');
+  process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function updateConfig() {
-  const version = '1.0.' + runNumber;
-  const apkUrl = 'https://github.com/' + repository + '/releases/latest/download/app-release.apk';
+  const apkUrl = 'https://github.com/' + repository + '/releases/latest/download/app-arm64-v8a-release.apk';
 
   console.log('Actualizando Supabase:');
   console.log('  min_version =', version);
   console.log('  apk_url     =', apkUrl);
 
+  // Upsert min_version (insert if not exists, update if exists)
   const { error: err1 } = await supabase
     .from('app_config')
-    .update({ value: version })
-    .eq('key', 'min_version');
+    .upsert({ key: 'min_version', value: version }, { onConflict: 'key' });
 
   if (err1) {
     console.error('Error actualizando min_version:', err1.message);
     process.exit(1);
   }
 
+  // Upsert apk_url
   const { error: err2 } = await supabase
     .from('app_config')
-    .update({ value: apkUrl })
-    .eq('key', 'apk_url');
+    .upsert({ key: 'apk_url', value: apkUrl }, { onConflict: 'key' });
 
   if (err2) {
     console.error('Error actualizando apk_url:', err2.message);
     process.exit(1);
   }
 
-  console.log('Supabase actualizado correctamente.');
+  console.log('✅ Supabase actualizado correctamente.');
+  console.log('   Usuarios con versión < ' + version + ' verán la pantalla de actualización.');
 }
 
 updateConfig().catch((e) => {

@@ -47,19 +47,23 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
+      - name: Extract version from pubspec.yaml
+        id: version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Detected version: $VERSION"
+
       - name: Build Split Release APK (arm64 only)
         run: flutter build apk --release --split-per-abi --target-platform android-arm64
 
       - name: Create GH Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.0.${{ github.run_number }}"
-          name: "Actualización a v1.0.${{ github.run_number }}"
+          tag_name: "v${{ steps.version.outputs.VERSION }}"
+          name: "MexaPresta v${{ steps.version.outputs.VERSION }}"
           body: |
-            - Nuevo: Splash Screen rediseñado con animaciones
-            - Nuevo: Pantalla de Actualización con changelog dinámico desde GitHub
-            - Fix: Corregido parpadeo en pantalla de Login al escribir
-            - Mejora: APK optimizado (~60% más ligero) con R8 shrinking
+            Actualización automática v${{ steps.version.outputs.VERSION }}
           files: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
           make_latest: true
 
@@ -72,12 +76,11 @@ jobs:
         run: npm install @supabase/supabase-js
         working-directory: .github/scripts
 
-      - name: Update Supabase Config
-        continue-on-error: true
+      - name: Update Supabase min_version
         working-directory: .github/scripts
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          RUN_NUMBER: ${{ github.run_number }}
+          APP_VERSION: ${{ steps.version.outputs.VERSION }}
           REPO: ${{ github.repository }}
         run: node update_supabase.js
