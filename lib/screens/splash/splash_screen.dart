@@ -151,9 +151,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         if (info.isUpdateRequired && info.updateUrl != null) {
           Navigator.of(context).pushReplacement(
             PageRouteBuilder(
-              pageBuilder: (_, __, ___) => UpdateScreen(appUrl: info.updateUrl!),
+              pageBuilder: (_, _, _) => UpdateScreen(appUrl: info.updateUrl!),
               transitionDuration: const Duration(milliseconds: 600),
-              transitionsBuilder: (_, anim, __, child) => FadeTransition(opacity: anim, child: child),
+              transitionsBuilder: (_, anim, _, child) => FadeTransition(opacity: anim, child: child),
             ),
           );
         } else {
@@ -166,9 +166,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void _navigateToLogin() {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const LoginScreen(),
+        pageBuilder: (_, _, _) => const LoginScreen(),
         transitionDuration: const Duration(milliseconds: 600),
-        transitionsBuilder: (_, anim, __, child) => FadeTransition(opacity: anim, child: child),
+        transitionsBuilder: (_, anim, _, child) => FadeTransition(opacity: anim, child: child),
       ),
     );
   }

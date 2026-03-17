@@ -5,7 +5,7 @@ import '../config/supabase_config.dart';
 // URL base del APK en GitHub Releases.
 // Esto siempre apunta a la release más reciente.
 const _githubApkUrl =
-    'https://github.com/leslyyareth866-code/prestamos_flutter_app/releases/latest/download/mexa-presta.apk';
+    'https://github.com/leslyyareth866-code/prestamos_flutter_app/releases/latest/download/app-arm64-v8a-release.apk';
 
 class AppUpdateInfo {
   final bool isUpdateRequired;

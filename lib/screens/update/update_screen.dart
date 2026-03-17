@@ -648,7 +648,7 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
                                 ).copyWith(
-                                  overlayColor: MaterialStateProperty.all(Colors.white.withOpacity(0.2)),
+                                  overlayColor: WidgetStateProperty.all(Colors.white.withOpacity(0.2)),
                                 ),
                               ),
                             ),
@@ -665,14 +665,14 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
                                   side: const BorderSide(color: Color(0xFFE5E7EB), width: 1.5),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
                                 ).copyWith(
-                                  foregroundColor: MaterialStateProperty.resolveWith((states) {
-                                    if (states.contains(MaterialState.pressed) || states.contains(MaterialState.hovered)) {
+                                  foregroundColor: WidgetStateProperty.resolveWith((states) {
+                                    if (states.contains(WidgetState.pressed) || states.contains(WidgetState.hovered)) {
                                       return const Color(0xFF2D3142);
                                     }
                                     return const Color(0xFF9CA3AF);
                                   }),
-                                  backgroundColor: MaterialStateProperty.resolveWith((states) {
-                                    if (states.contains(MaterialState.pressed) || states.contains(MaterialState.hovered)) {
+                                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                                    if (states.contains(WidgetState.pressed) || states.contains(WidgetState.hovered)) {
                                       return const Color(0xFFF3F4F6);
                                     }
                                     return Colors.transparent;
