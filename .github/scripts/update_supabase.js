@@ -1,12 +1,14 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const runNumber = process.env.RUN_NUMBER;
-const repository = process.env.REPO;
+const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
+const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+const runNumber = (process.env.RUN_NUMBER || '').trim();
+const repository = (process.env.REPO || '').trim();
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('ERROR: SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY no están configurados.');
+  console.error('  SUPABASE_URL length:', supabaseUrl.length);
+  console.error('  KEY length:', supabaseKey.length);
   process.exit(1);
 }
 
