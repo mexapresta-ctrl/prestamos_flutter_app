@@ -12,9 +12,6 @@ jobs:
     permissions:
       contents: write
       
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -29,56 +26,22 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ''
           channel: 'stable'
           cache: true
 
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Cache Build Outputs
-        uses: actions/cache@v4
-        with:
-          path: build/app/outputs/repo
-          key: ${{ runner.os }}-build-outputs-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-build-outputs-
-
-      - name: Build APK (Split by ABI for smaller size)
-        run: flutter build apk --release --split-per-abi
+      - name: Build Fat Release APK
+        run: flutter build apk --release
 
       - name: Rename APK
-        run: mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/app/outputs/flutter-apk/mexa-presta.apk
+        run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/mexa-presta.apk
 
-      - name: Create Release
+      - name: Create GH Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v1.0.${{ github.run_number }}"
-          name: "Update ${{ github.run_number }}"
+          name: "Actualización a v1.0.${{ github.run_number }}"
           files: build/app/outputs/flutter-apk/mexa-presta.apk
           make_latest: true
-
-      - name: Update Supabase (version + apk_url)
-        run: |
-          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
-          APK_URL="https://github.com/leslyyareth866-code/prestamos_flutter_app/releases/latest/download/mexa-presta.apk"
-          SUPABASE_URL="https://cogvtgydumgprhnwxftf.supabase.co"
-          API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZ3Z0Z3lkdW1ncHJobnd4ZnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDEzMzEsImV4cCI6MjA4OTA3NzMzMX0.QLWKLRwef7B1FyJBKKEFiiwnecB1_8HEoIaONghUWMs"
-          
-          echo "Updating min_version to $VERSION..."
-          curl -s -X PATCH "$SUPABASE_URL/rest/v1/app_config?key=eq.min_version" \
-            -H "apikey: $API_KEY" \
-            -H "Authorization: Bearer $API_KEY" \
-            -H "Content-Type: application/json" \
-            -H "Prefer: return=minimal" \
-            -d "{\"value\": \"$VERSION\"}"
-
-          echo "Updating apk_url to $APK_URL..."
-          curl -s -X PATCH "$SUPABASE_URL/rest/v1/app_config?key=eq.apk_url" \
-            -H "apikey: $API_KEY" \
-            -H "Authorization: Bearer $API_KEY" \
-            -H "Content-Type: application/json" \
-            -H "Prefer: return=minimal" \
-            -d "{\"value\": \"$APK_URL\"}"
-
-          echo "Done! App will require update to v$VERSION"
