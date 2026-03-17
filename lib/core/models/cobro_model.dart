@@ -22,8 +22,8 @@ class CobroModel {
       clienteId: json['clienteId'] as String? ?? json['cliente_id'] as String,
       cobradorId: json['cobradorId'] as String? ?? json['cobrador_id'] as String,
       monto: (json['monto'] as num?) ?? 0.0,
-      // The original db used 'fecha' but the app normalizes to 'fechaCobro' sometimes
-      fechaCobro: json['fechaCobro'] as String? ?? json['fecha'] as String?,
+      // The original db used 'fecha' or 'fecha_cobro'
+      fechaCobro: json['fecha_cobro'] as String? ?? json['fechaCobro'] as String? ?? json['fecha'] as String?,
     );
   }
 }

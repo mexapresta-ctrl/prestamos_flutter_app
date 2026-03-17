@@ -80,7 +80,7 @@ class AdminClienteDetalleView extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(cliente.nombre, style: AppTypography.headingPrincipal.copyWith(fontSize: 18)),
-                                Text(cliente.telefono != null && cliente.telefono!.isNotEmpty ? 'Tel: \${cliente.telefono}' : 'Tel: No registrado', style: const TextStyle(color: AppColors.ink3)),
+                                Text(cliente.telefono != null && cliente.telefono!.isNotEmpty ? 'Tel: ${cliente.telefono}' : 'Tel: No registrado', style: const TextStyle(color: AppColors.ink3)),
                               ],
                             ),
                           ),
@@ -90,7 +90,7 @@ class AdminClienteDetalleView extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildMiniStat('Préstamos Totales', '\${prestamosDelCliente.length}'),
+                          _buildMiniStat('Préstamos Totales', '${prestamosDelCliente.length}'),
                           _buildMiniStat('Total Acumulado', formatCurrency.format(totalPrestado)),
                           _buildMiniStat('Total Abonado', formatCurrency.format(totalAbonado)),
                         ],
@@ -111,8 +111,8 @@ class AdminClienteDetalleView extends ConsumerWidget {
                 else
                   ...prestamosDelCliente.map((p) => ListCard(
                     role: Role.admin,
-                    title: 'Crédito \${p.codigo ?? p.id.substring(0, 8)}',
-                    subtitle: '\${p.cuotasTotales} cuotas de \${formatCurrency.format(p.cuotaSemanal)}',
+                    title: 'Crédito ${p.codigo ?? p.id.substring(0, 8)}',
+                    subtitle: '${p.cuotasTotales} cuotas de ${formatCurrency.format(p.cuotaSemanal)}',
                     amount: formatCurrency.format(p.cuotaSemanal * p.cuotasTotales),
                     badge: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -144,9 +144,9 @@ class AdminClienteDetalleView extends ConsumerWidget {
                 else
                   ...cobrosDelCliente.map((c) => ListCard(
                     role: Role.admin,
-                    title: 'Abono \${formatCurrency.format(c.monto)}',
+                    title: 'Abono ${formatCurrency.format(c.monto)}',
                     subtitle: c.fechaCobro != null ? formatDate.format(DateTime.parse(c.fechaCobro!)) : 'Sin fecha',
-                    amount: '+\${formatCurrency.format(c.monto)}',
+                    amount: '+${formatCurrency.format(c.monto)}',
                     badge: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(

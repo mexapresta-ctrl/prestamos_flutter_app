@@ -38,9 +38,9 @@ class PrestamoModel {
       clienteId: json['clienteId'] as String? ?? json['cliente_id'] as String,
       cobradorId: json['cobradorId'] as String? ?? json['cobrador_id'] as String,
       monto: (json['monto'] as num?) ?? 0.0,
-      cuotaSemanal: (json['cuotaSemanal'] as num?) ?? 0.0,
-      cuotasTotales: (json['cuotasTotales'] as int?) ?? 0,
-      cuotasPagadas: (json['cuotasPagadas'] as int?) ?? 0,
+      cuotaSemanal: (json['cuota_semanal'] as num?) ?? (json['cuotaSemanal'] as num?) ?? 0.0,
+      cuotasTotales: (json['cuotas_totales'] as int?) ?? (json['cuotasTotales'] as int?) ?? 0,
+      cuotasPagadas: (json['cuotas_pagadas'] as int?) ?? (json['cuotasPagadas'] as int?) ?? 0,
       estado: (json['estado'] as String?) ?? 'activo',
       activo: parseBool(json['activo']),
       createdAt: json['created_at'] != null 
