@@ -49,13 +49,64 @@ jobs:
       - name: Build Fat Release APK
         run: flutter build apk --release
 
-      - name: Rename APK
-        run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/mexa-presta.apk
-
       - name: Create GH Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v1.0.${{ github.run_number }}"
           name: "Actualización a v1.0.${{ github.run_number }}"
-          files: build/app/outputs/flutter-apk/mexa-presta.apk
+          files: build/app/outputs/flutter-apk/app-release.apk
           make_latest: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install Supabase JS Client
+        run: npm install @supabase/supabase-js
+
+      - name: Update Supabase Config
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          node -e "
+            const { createClient } = require('@supabase/supabase-js');
+            const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+            
+            async function updateConfig() {
+              const version = '1.0.' + process.env.GITHUB_RUN_NUMBER;
+              // URL oficial usando el nombre real original generado por Flutter: app-release.apk
+              const apkUrl = 'https://github.com/' + process.env.GITHUB_REPOSITORY + '/releases/latest/download/app-release.apk';
+              
+              console.log('Actualizando Supabase: min_version=' + version + ', apk_url=' + apkUrl);
+              
+              // Actualizar min_version
+              const { error: err1 } = await supabase
+                .from('app_config')
+                .update({ value: version })
+                .eq('key', 'min_version');
+                
+              if (err1) {
+                console.error('Error al actualizar min_version:', err1);
+                process.exit(1);
+              }
+              
+              // Actualizar apk_url
+              const { error: err2 } = await supabase
+                .from('app_config')
+                .update({ value: apkUrl })
+                .eq('key', 'apk_url');
+                
+              if (err2) {
+                console.error('Error al actualizar apk_url:', err2);
+                process.exit(1);
+              }
+              
+              console.log('¡Supabase actualizado correctamente!');
+            }
+            
+            updateConfig();
+          "
