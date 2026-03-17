@@ -221,8 +221,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // ── Role Selector ────────────────────────────
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 8,
+                              runSpacing: 8,
                               children: List.generate(_roles.length, (index) {
                                 final r = _roles[index];
                                 final isSelected = _selectedRoleIndex == index;
@@ -237,10 +239,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   child: AnimatedContainer(
                                     duration:
                                         const Duration(milliseconds: 200),
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 6),
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 10),
+                                        horizontal: 14, vertical: 10),
                                     decoration: BoxDecoration(
                                       color: isSelected
                                           ? r.primary

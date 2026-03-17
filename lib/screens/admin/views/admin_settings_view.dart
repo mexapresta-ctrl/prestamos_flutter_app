@@ -4,6 +4,10 @@ import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 import '../../../widgets/custom_button.dart';
 import '../../../core/providers/auth_provider.dart';
+import 'admin_prestamos_view.dart';
+import 'admin_pagos_view.dart';
+import 'admin_equipo_view.dart';
+import 'admin_reportes_view.dart';
 
 class AdminSettingsView extends ConsumerWidget {
   const AdminSettingsView({super.key});
@@ -53,16 +57,6 @@ class AdminSettingsView extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ver perfil próximamente')));
-                    },
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.admin,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                    child: const Text('Ver perfil', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
                 ],
               ),
             ),
@@ -76,42 +70,42 @@ class AdminSettingsView extends ConsumerWidget {
                     icon: Icons.monetization_on_outlined,
                     label: 'Préstamos',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPrestamosView()));
                     },
                   ),
                   _buildActionCard(
                     icon: Icons.payments_outlined,
                     label: 'Pagos',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPagosView()));
                     },
                   ),
                   _buildActionCard(
                     icon: Icons.calculate_outlined,
                     label: 'Modalidades',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Modalidades — Próximamente')));
                     },
                   ),
                   _buildActionCard(
                     icon: Icons.handshake_outlined,
                     label: 'Prestamistas',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Prestamistas — Próximamente')));
                     },
                   ),
                   _buildActionCard(
                     icon: Icons.groups_outlined,
                     label: 'Equipo',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminEquipoView()));
                     },
                   ),
                   _buildActionCard(
                     icon: Icons.fact_check_outlined,
                     label: 'Auditoría',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente')));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminReportesView()));
                     },
                   ),
                   
@@ -126,7 +120,7 @@ class AdminSettingsView extends ConsumerWidget {
                        ref.read(authProvider.notifier).logout();
                     },
                   ),
-                  const SizedBox(height: 100), // padding for bottom nav
+                  const SizedBox(height: 100),
                 ],
               ),
             ),

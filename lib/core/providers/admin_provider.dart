@@ -9,6 +9,7 @@ class AdminDashboardData {
   final List<ClienteModel> clientes;
   final List<CobroModel> cobros;
   final List<Map<String, dynamic>> cobradores;
+  final List<Map<String, dynamic>> asesores;
 
   // Calculados
   final double carteraTotal;
@@ -22,6 +23,7 @@ class AdminDashboardData {
     required this.clientes,
     required this.cobros,
     required this.cobradores,
+    required this.asesores,
     required this.carteraTotal,
     required this.cobradoHoy,
     required this.enMora,
@@ -68,22 +70,29 @@ class AdminNotifier extends AsyncNotifier<AdminDashboardData> {
           .toList();
 
       // 4. Fetch Cobradores (usuarios rol = cobrador)
-      final usuariosRes = await SupabaseConfig.client
+      final cobradoresRes = await SupabaseConfig.client
           .from('usuarios')
-          .select('id, nombre, usuario, iniciales')
+          .select('id, nombre, usuario, iniciales, rol')
           .eq('rol', 'cobrador')
           .eq('activo', true);
           
-      final cobradores = List<Map<String, dynamic>>.from(usuariosRes);
+      final cobradores = List<Map<String, dynamic>>.from(cobradoresRes);
+
+      // 5. Fetch Asesores (usuarios rol = asesor)
+      final asesoresRes = await SupabaseConfig.client
+          .from('usuarios')
+          .select('id, nombre, usuario, iniciales, rol')
+          .eq('rol', 'asesor')
+          .eq('activo', true);
+          
+      final asesores = List<Map<String, dynamic>>.from(asesoresRes);
 
       // --- CALCULATIONS ---
       
-      // Cartera Total (Sum of cuotaSemanal * cuotasTotales for active loans)
       final carteraTotal = prestamos
           .where((p) => ['activo', 'vencido', 'liquidado'].contains(p.estado))
           .fold(0.0, (sum, p) => sum + (p.cuotaSemanal * p.cuotasTotales));
 
-      // Cobrado Hoy
       final hoy = DateTime.now().toIso8601String().substring(0, 10);
       final cobradoHoy = cobros
           .where((c) {
@@ -92,12 +101,10 @@ class AdminNotifier extends AsyncNotifier<AdminDashboardData> {
           })
           .fold(0.0, (sum, c) => sum + c.monto);
 
-      // En mora (vencidos)
       final prestamosMora = prestamos.where((p) => p.estado == 'vencido');
       final enMora = prestamosMora.length;
       final montoEnMora = prestamosMora.fold(0.0, (sum, p) => sum + (p.cuotaSemanal * p.cuotasTotales));
 
-      // Por Aprobar (solicitado)
       final porAprobar = prestamos.where((p) => p.estado == 'solicitado').length;
 
       return AdminDashboardData(
@@ -105,6 +112,7 @@ class AdminNotifier extends AsyncNotifier<AdminDashboardData> {
         clientes: clientes,
         cobros: cobros,
         cobradores: cobradores,
+        asesores: asesores,
         carteraTotal: carteraTotal,
         cobradoHoy: cobradoHoy,
         enMora: enMora,

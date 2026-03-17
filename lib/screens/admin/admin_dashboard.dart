@@ -5,10 +5,11 @@ import '../../theme/app_typography.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/admin_provider.dart';
 import '../../core/models/user_model.dart';
-import 'views/admin_usuarios_view.dart';
+import 'views/admin_clientes_view.dart';
 import 'views/admin_reportes_view.dart';
 import 'views/admin_settings_view.dart';
-import 'views/admin_cliente_create_view.dart';
+import 'views/admin_prestamos_view.dart';
+import 'views/admin_cobrador_detalle_view.dart';
 import 'package:intl/intl.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
@@ -33,7 +34,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         index: _currentIndex,
         children: [
           _buildHomeView(adminState, user, formatCurrency),
-          const AdminUsuariosView(),    // Clientes
+          const AdminClientesView(),    // Clientes
           const SizedBox(),             // FAB uses this space
           const AdminReportesView(),    // Bitácora
           const AdminSettingsView(),    // Mi Perfil
@@ -44,20 +45,174 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         width: 64,
         margin: const EdgeInsets.only(top: 30),
         child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AdminClienteCreateView()),
-            );
-          },
+          heroTag: 'main_fab',
+          onPressed: () => _showRegistrarPago(context),
           backgroundColor: AppColors.admin,
           elevation: 4,
           shape: const CircleBorder(),
-          child: const Icon(Icons.add, color: Colors.white, size: 32),
+          child: const Icon(Icons.attach_money, color: Colors.white, size: 32),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  /// Opens a bottom sheet to select a client and register a payment
+  void _showRegistrarPago(BuildContext context) {
+    final adminState = ref.read(adminProvider);
+    final data = adminState.valueOrNull;
+    if (data == null) return;
+
+    final formatCurrency = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    final montoController = TextEditingController();
+    String? selectedClienteId;
+    String? selectedPrestamoId;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            // Active loans for selected client
+            final prestamosCliente = selectedClienteId != null
+                ? data.prestamos.where((p) => p.clienteId == selectedClienteId && p.estado == 'activo').toList()
+                : <dynamic>[];
+
+            return Container(
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Handle bar
+                      Center(
+                        child: Container(
+                          width: 40, height: 4,
+                          decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(100)),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text('Registrar Pago', style: AppTypography.headingPrincipal.copyWith(fontSize: 20)),
+                      const SizedBox(height: 20),
+
+                      // Client dropdown
+                      const Text('Cliente', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.ink2)),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: selectedClienteId,
+                        decoration: InputDecoration(
+                          hintText: 'Seleccionar cliente',
+                          filled: true,
+                          fillColor: AppColors.background,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                        ),
+                        items: data.clientes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.nombre, overflow: TextOverflow.ellipsis))).toList(),
+                        onChanged: (v) => setModalState(() {
+                          selectedClienteId = v;
+                          selectedPrestamoId = null;
+                        }),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Loan dropdown (appears after client selected)
+                      if (selectedClienteId != null) ...[
+                        const Text('Préstamo', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.ink2)),
+                        const SizedBox(height: 8),
+                        if (prestamosCliente.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(color: AppColors.warnSurface, borderRadius: BorderRadius.circular(8)),
+                            child: const Text('Este cliente no tiene préstamos activos.', style: TextStyle(color: AppColors.warn, fontSize: 13)),
+                          )
+                        else
+                          DropdownButtonFormField<String>(
+                            value: selectedPrestamoId,
+                            decoration: InputDecoration(
+                              hintText: 'Seleccionar préstamo',
+                              filled: true,
+                              fillColor: AppColors.background,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                            ),
+                            items: prestamosCliente.map((p) => DropdownMenuItem(
+                              value: p.id,
+                              child: Text('${p.codigo ?? p.id.substring(0, 8)} · ${formatCurrency.format(p.cuotaSemanal)}/sem'),
+                            )).toList(),
+                            onChanged: (v) => setModalState(() => selectedPrestamoId = v),
+                          ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Amount
+                      if (selectedPrestamoId != null) ...[
+                        const Text('Monto', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.ink2)),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: montoController,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(
+                            hintText: '0.00',
+                            prefixText: '\$ ',
+                            filled: true,
+                            fillColor: AppColors.background,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.admin, width: 2)),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Submit
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              final monto = double.tryParse(montoController.text);
+                              if (monto == null || monto <= 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Ingresa un monto válido'), backgroundColor: AppColors.error),
+                                );
+                                return;
+                              }
+                              Navigator.pop(ctx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Pago de ${formatCurrency.format(monto)} registrado'),
+                                  backgroundColor: AppColors.ok,
+                                ),
+                              );
+                              // TODO: Hook into actual cobro insertion via provider
+                            },
+                            icon: const Icon(Icons.check),
+                            label: const Text('Registrar Pago', style: TextStyle(fontWeight: FontWeight.w600)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.admin,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -83,9 +238,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                         style: AppTypography.headingPrincipal.copyWith(fontSize: 20),
                       ),
                       const SizedBox(height: 4),
-                      Text(
+                      const Text(
                         'Admin',
-                        style: const TextStyle(color: AppColors.ink3, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: AppColors.ink3, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -96,9 +251,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                         'MexaPresta',
                         style: AppTypography.headingPrincipal.copyWith(fontSize: 18, color: AppColors.admin),
                       ),
-                      Text(
+                      const Text(
                         'Tu dinero al instante',
-                        style: const TextStyle(color: AppColors.ink4, fontSize: 12, fontWeight: FontWeight.w500),
+                        style: TextStyle(color: AppColors.ink4, fontSize: 12, fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
@@ -133,6 +288,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                             icon: Icons.payments_rounded,
                             iconColor: AppColors.admin,
                             bgColor: AppColors.adminSurface,
+                            onTap: () => setState(() => _currentIndex = 3),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -143,6 +299,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                             icon: Icons.group_rounded,
                             iconColor: AppColors.cobrador,
                             bgColor: AppColors.cobradorSurface,
+                            onTap: () => setState(() => _currentIndex = 1),
                           ),
                         ),
                       ],
@@ -157,6 +314,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                             icon: Icons.warning_rounded,
                             iconColor: AppColors.warn,
                             bgColor: AppColors.warnSurface,
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPrestamosView(initialFilter: 'vencido')));
+                            },
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -167,6 +327,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                             icon: Icons.hourglass_empty_rounded,
                             iconColor: AppColors.asesor,
                             bgColor: AppColors.asesorSurface,
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPrestamosView(initialFilter: 'solicitado')));
+                            },
                           ),
                         ),
                       ],
@@ -185,7 +348,6 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                         final String cobradorId = c['id'].toString();
                         final String nombre = c['nombre'] ?? 'Desconocido';
                         
-                        // Calculate metrics
                         final prestamosAsignados = data.prestamos.where((p) => p.cobradorId == cobradorId && p.estado == 'activo');
                         final totalClientes = prestamosAsignados.map((p) => p.clienteId).toSet().length;
                         
@@ -195,72 +357,82 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                         
                         final double porcentaje = totalClientes > 0 ? (clientesCobrados / totalClientes) * 100 : 0;
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Row(
-                            children: [
-                              // Icono
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.cobradorSurface,
-                                  shape: BoxShape.circle,
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => AdminCobradorDetalleView(cobrador: c)));
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.cobradorSurface,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.directions_walk_rounded, color: AppColors.cobrador, size: 24),
                                 ),
-                                child: const Icon(Icons.directions_walk_rounded, color: AppColors.cobrador, size: 24),
-                              ),
-                              const SizedBox(width: 16),
-                              
-                              // Detalles
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      nombre,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.ink),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text('Cobrados: $clientesCobrados', style: const TextStyle(color: AppColors.ink3, fontSize: 13)),
-                                            const SizedBox(height: 2),
-                                            Text('Pagos: ${formatCurrency.format(montoCobrado)}', style: const TextStyle(color: AppColors.ink3, fontSize: 13, fontWeight: FontWeight.bold)),
-                                          ],
-                                        ),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Text('${porcentaje.toStringAsFixed(0)}%', style: const TextStyle(color: AppColors.ok, fontSize: 16, fontWeight: FontWeight.w800)),
-                                            const Text('de meta', style: TextStyle(color: AppColors.ink4, fontSize: 10)),
-                                          ],
-                                        )
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    // Progress bar
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: LinearProgressIndicator(
-                                        value: porcentaje / 100.0,
-                                        backgroundColor: AppColors.border,
-                                        color: AppColors.ok,
-                                        minHeight: 6,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              nombre,
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.ink),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const Icon(Icons.chevron_right, color: AppColors.ink4, size: 20),
+                                        ],
                                       ),
-                                    )
-                                  ],
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text('Cobrados: $clientesCobrados', style: const TextStyle(color: AppColors.ink3, fontSize: 13)),
+                                              const SizedBox(height: 2),
+                                              Text('Pagos: ${formatCurrency.format(montoCobrado)}', style: const TextStyle(color: AppColors.ink3, fontSize: 13, fontWeight: FontWeight.bold)),
+                                            ],
+                                          ),
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.end,
+                                            children: [
+                                              Text('${porcentaje.toStringAsFixed(0)}%', style: const TextStyle(color: AppColors.ok, fontSize: 16, fontWeight: FontWeight.w800)),
+                                              const Text('de meta', style: TextStyle(color: AppColors.ink4, fontSize: 10)),
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: LinearProgressIndicator(
+                                          value: porcentaje / 100.0,
+                                          backgroundColor: AppColors.border,
+                                          color: AppColors.ok,
+                                          minHeight: 6,
+                                        ),
+                                      )
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         );
                       }),
@@ -273,7 +445,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                             color: AppColors.ink3,
                           )),
                     
-                    const SizedBox(height: 100), // padding for bottom nav
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -283,40 +455,50 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       );
   }
 
-  Widget _buildDashboardCard({required String title, required String value, required IconData icon, required Color iconColor, required Color bgColor}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  borderRadius: BorderRadius.circular(8),
+  Widget _buildDashboardCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color iconColor,
+    required Color bgColor,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 20),
                 ),
-                child: Icon(icon, color: iconColor, size: 20),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(color: AppColors.ink4, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(color: AppColors.ink, fontSize: 18, fontWeight: FontWeight.w800),
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(color: AppColors.ink4, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(color: AppColors.ink, fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -333,7 +515,6 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Lado Izquierdo
             Row(
               children: [
                 _buildNavItem(icon: Icons.home_rounded, label: 'Inicio', index: 0),
@@ -341,7 +522,6 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                 _buildNavItem(icon: Icons.group_rounded, label: 'Clientes', index: 1),
               ],
             ),
-            // Lado Derecho
             Row(
               children: [
                 _buildNavItem(icon: Icons.assignment_rounded, label: 'Bitácora', index: 3),
@@ -383,4 +563,3 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     );
   }
 }
-
