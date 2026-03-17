@@ -2,6 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../config/supabase_config.dart';
 
+// URL base del APK en GitHub Releases.
+// Esto siempre apunta a la release más reciente.
+const _githubApkUrl =
+    'https://github.com/leslyyareth866-code/prestamos_flutter_app/releases/latest/download/mexa-presta.apk';
+
 class AppUpdateInfo {
   final bool isUpdateRequired;
   final String? updateUrl;
@@ -11,9 +16,6 @@ class AppUpdateInfo {
 
 final updateProvider = FutureProvider<AppUpdateInfo>((ref) async {
   try {
-    // Attempt to fetch configuration from Supabase 'app_config' table.
-    // The table should have columns: 'key' (text) and 'value' (text).
-    // Expected keys: 'min_version' and 'apk_url'
     final response = await SupabaseConfig.client
         .from('app_config')
         .select('*')
@@ -31,6 +33,9 @@ final updateProvider = FutureProvider<AppUpdateInfo>((ref) async {
       if (row['key'] == 'apk_url') apkUrl = row['value'];
     }
 
+    // Siempre usar la URL de GitHub como fallback si no hay una en Supabase
+    final downloadUrl = (apkUrl != null && apkUrl.isNotEmpty) ? apkUrl : _githubApkUrl;
+
     if (minVersionStr != null) {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersionStr = packageInfo.version;
@@ -39,12 +44,11 @@ final updateProvider = FutureProvider<AppUpdateInfo>((ref) async {
       final currentVersionParts = currentVersionStr.split('.').map(int.tryParse).toList();
 
       bool requiresUpdate = false;
-      
-      // Simple semantic version check
+
       for (int i = 0; i < minVersionParts.length; i++) {
         final minPart = minVersionParts[i] ?? 0;
         final currPart = (i < currentVersionParts.length) ? (currentVersionParts[i] ?? 0) : 0;
-        
+
         if (currPart < minPart) {
           requiresUpdate = true;
           break;
@@ -56,13 +60,12 @@ final updateProvider = FutureProvider<AppUpdateInfo>((ref) async {
 
       return AppUpdateInfo(
         isUpdateRequired: requiresUpdate,
-        updateUrl: requiresUpdate ? apkUrl : null,
+        updateUrl: requiresUpdate ? downloadUrl : null,
       );
     }
 
     return AppUpdateInfo(isUpdateRequired: false);
   } catch (e) {
-    // If the table doesn't exist or any other error occurs, fail gracefully.
     return AppUpdateInfo(isUpdateRequired: false);
   }
 });

@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
-import '../../widgets/custom_button.dart';
 
 class UpdateScreen extends StatefulWidget {
   final String appUrl;
@@ -17,132 +17,168 @@ class UpdateScreen extends StatefulWidget {
 
 class _UpdateScreenState extends State<UpdateScreen> {
   bool _isDownloading = false;
+  bool _done = false;
   double _progress = 0;
   String _statusText = '¡Nueva Versión Disponible!';
-  String _detailText = 'MEXA PRESTA se ha actualizado para brindarte un mejor servicio. Es necesario descargar la última versión para continuar.';
+  String _detailText =
+      'MEXA PRESTA se ha actualizado para brindarte un mejor servicio. Es necesario descargar la última versión para continuar.';
+  String? _localPath;
 
   Future<void> _startDownload() async {
     setState(() {
       _isDownloading = true;
+      _done = false;
+      _progress = 0;
       _statusText = 'Descargando Actualización...';
       _detailText = 'Por favor, no cierres esta pantalla hasta que se complete la descarga.';
-      _progress = 0;
     });
 
     try {
       if (!Platform.isAndroid) return;
 
-      // Usar flutter_file_downloader asegura descargar los archivos resolviendo los permisos correctamente.
-      // Al usar downloadDestination: DownloadDestinations.appFiles el APK se guardará
-      // en la memoria limpia (Data) del teléfono sin ensuciar la carpeta visible de "Descargas" del usuario.
-      FileDownloader.downloadFile(
-        url: widget.appUrl,
-        name: 'mexa-presta-update.apk',
-        downloadDestination: DownloadDestinations.appFiles,
-        onProgress: (name, progress) {
-          setState(() {
-            _progress = progress / 100.0;
-          });
-        },
-        onDownloadCompleted: (path) async {
-          setState(() {
-            _statusText = 'Descarga Completada';
-            _detailText = 'Iniciando la instalación. Si Android te pide permisos para instalar aplicaciones desconocidas, acéptalos.';
-            _isDownloading = false;
-            _progress = 1.0;
-          });
+      // Save to external storage Downloads dir so FileProvider can access it
+      final dir = await getExternalStorageDirectory();
+      if (dir == null) throw Exception('No se pudo acceder al almacenamiento externo.');
 
-          // Iniciar la instalación
-          final result = await OpenFilex.open(path);
-          
-          if (result.type != ResultType.done) {
-            if (mounted) {
-              setState(() {
-                _statusText = 'Error en Instalación';
-                _detailText = 'No se pudo iniciar el instalador (Código: \${result.message}). Por favor, contacta a soporte.';
-                _isDownloading = false;
-              });
-            }
-          }
-        },
-        onDownloadError: (errorMessage) {
-          if (mounted) {
+      final savePath = '${dir.path}/mexa-presta-update.apk';
+
+      final dio = Dio();
+      await dio.download(
+        widget.appUrl,
+        savePath,
+        onReceiveProgress: (received, total) {
+          if (total > 0) {
             setState(() {
-              _statusText = 'Error en la Descarga';
-              _detailText = 'Ocurrió el siguiente error: $errorMessage. Verifica tu conexión a internet o intenta nuevamente.';
-              _isDownloading = false;
-              _progress = 0;
+              _progress = received / total;
             });
           }
-          debugPrint('Download error: $errorMessage');
         },
+        options: Options(
+          responseType: ResponseType.bytes,
+          followRedirects: true,
+          validateStatus: (status) => status != null && status < 500,
+        ),
       );
+
+      setState(() {
+        _localPath = savePath;
+        _isDownloading = false;
+        _done = true;
+        _progress = 1.0;
+        _statusText = 'Descarga Completada';
+        _detailText = 'Toca el botón para instalar. Si Android solicita permiso para instalar apps desconocidas, acéptalo.';
+      });
+
+      // Abrir instalador directamente
+      await _installApk(savePath);
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusText = 'Error en la Ejecución';
-          _detailText = 'Excepción: $e';
+          _statusText = 'Error en la Descarga';
+          _detailText = 'Ocurrió un error: $e\n\nVerifica tu conexión a internet e intenta nuevamente.';
           _isDownloading = false;
           _progress = 0;
         });
       }
-      debugPrint('Exception downloading update: $e');
+      debugPrint('Update download error: $e');
+    }
+  }
+
+  Future<void> _installApk(String path) async {
+    try {
+      final result = await OpenFilex.open(path, type: 'application/vnd.android.package-archive');
+      if (result.type != ResultType.done) {
+        if (mounted) {
+          setState(() {
+            _statusText = 'Lista para instalar';
+            _detailText = 'Toca "Instalar Ahora" para instalar manualmente la actualización.';
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Install error: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Icon(
-                _isDownloading ? Icons.cloud_download_outlined : Icons.system_update_rounded,
-                size: 80,
-                color: AppColors.admin,
-              ),
-              const SizedBox(height: 24),
-              Text(
-                _statusText,
-                style: AppTypography.headingPrincipal.copyWith(fontSize: 24),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _detailText,
-                style: AppTypography.subtext.copyWith(fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              
-              if (_isDownloading) ...[
-                LinearProgressIndicator(
-                  value: _progress,
-                  backgroundColor: AppColors.surface1,
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.admin),
-                  minHeight: 12,
-                  borderRadius: BorderRadius.circular(6),
+    return PopScope(
+      canPop: false, // Forzar actualización - no permitir salir
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(
+                  _done
+                      ? Icons.check_circle_outline_rounded
+                      : _isDownloading
+                          ? Icons.cloud_download_outlined
+                          : Icons.system_update_rounded,
+                  size: 100,
+                  color: _done ? Colors.green : AppColors.admin,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 32),
                 Text(
-                  '\${(_progress * 100).toStringAsFixed(1)}%',
-                  style: AppTypography.label.copyWith(color: AppColors.admin),
+                  _statusText,
+                  style: AppTypography.headingPrincipal.copyWith(fontSize: 24),
                   textAlign: TextAlign.center,
                 ),
-              ] else ...[
-                CustomButton(
-                  text: _progress >= 1.0 ? 'Reintentar instalación' : 'Descargar e Instalar',
-                  onPressed: _startDownload,
-                  icon: Icons.download_rounded,
-                  type: ButtonType.admin,
+                const SizedBox(height: 16),
+                Text(
+                  _detailText,
+                  style: AppTypography.subtext.copyWith(fontSize: 14),
+                  textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 40),
+
+                if (_isDownloading) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: _progress,
+                      backgroundColor: AppColors.surface1,
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.admin),
+                      minHeight: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '${(_progress * 100).toStringAsFixed(1)}%',
+                    style: AppTypography.label.copyWith(color: AppColors.admin),
+                    textAlign: TextAlign.center,
+                  ),
+                ] else if (_done && _localPath != null) ...[
+                  ElevatedButton.icon(
+                    onPressed: () => _installApk(_localPath!),
+                    icon: const Icon(Icons.install_mobile_rounded),
+                    label: const Text('Instalar Ahora'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ] else ...[
+                  ElevatedButton.icon(
+                    onPressed: _startDownload,
+                    icon: const Icon(Icons.download_rounded),
+                    label: const Text('Descargar e Instalar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.admin,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
