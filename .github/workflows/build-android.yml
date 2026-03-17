@@ -26,7 +26,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '' # Pulls latest stable automatically
+          flutter-version: ''
           channel: 'stable'
           cache: true
 
@@ -47,13 +47,27 @@ jobs:
           files: build/app/outputs/flutter-apk/mexa-presta.apk
           make_latest: true
 
-      - name: Extract Version and Update Supabase
+      - name: Update Supabase (version + apk_url)
         run: |
           VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
-          echo "Updating Supabase min_version to $VERSION"
-          curl -X PATCH 'https://cogvtgydumgprhnwxftf.supabase.co/rest/v1/app_config?key=eq.min_version' \
-          -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZ3Z0Z3lkdW1ncHJobnd4ZnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDEzMzEsImV4cCI6MjA4OTA3NzMzMX0.QLWKLRwef7B1FyJBKKEFiiwnecB1_8HEoIaONghUWMs" \
-          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZ3Z0Z3lkdW1ncHJobnd4ZnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDEzMzEsImV4cCI6MjA4OTA3NzMzMX0.QLWKLRwef7B1FyJBKKEFiiwnecB1_8HEoIaONghUWMs" \
-          -H "Content-Type: application/json" \
-          -H "Prefer: return=minimal" \
-          -d "{\"value\": \"$VERSION\"}"
+          APK_URL="https://github.com/leslyyareth866-code/prestamos_flutter_app/releases/latest/download/mexa-presta.apk"
+          SUPABASE_URL="https://cogvtgydumgprhnwxftf.supabase.co"
+          API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvZ3Z0Z3lkdW1ncHJobnd4ZnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDEzMzEsImV4cCI6MjA4OTA3NzMzMX0.QLWKLRwef7B1FyJBKKEFiiwnecB1_8HEoIaONghUWMs"
+          
+          echo "Updating min_version to $VERSION..."
+          curl -s -X PATCH "$SUPABASE_URL/rest/v1/app_config?key=eq.min_version" \
+            -H "apikey: $API_KEY" \
+            -H "Authorization: Bearer $API_KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d "{\"value\": \"$VERSION\"}"
+
+          echo "Updating apk_url to $APK_URL..."
+          curl -s -X PATCH "$SUPABASE_URL/rest/v1/app_config?key=eq.apk_url" \
+            -H "apikey: $API_KEY" \
+            -H "Authorization: Bearer $API_KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d "{\"value\": \"$APK_URL\"}"
+
+          echo "Done! App will require update to v$VERSION"
