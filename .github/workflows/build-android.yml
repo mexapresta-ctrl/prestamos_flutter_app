@@ -68,6 +68,7 @@ jobs:
         working-directory: .github/scripts
 
       - name: Update Supabase Config
+        continue-on-error: true
         working-directory: .github/scripts
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
