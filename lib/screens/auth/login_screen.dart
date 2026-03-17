@@ -60,6 +60,8 @@ MemoryImage _avatarFor(String b64) {
   return _avatarCache.putIfAbsent(b64, () => MemoryImage(base64Decode(b64)));
 }
 
+final _logoImage = MemoryImage(LoginAssets.getDecodedLogo());
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -150,7 +152,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 Column(
                   children: [
                     Image(
-                      image: MemoryImage(base64Decode(LoginAssets.logoBase64)),
+                      image: _logoImage,
                       height: 60,
                     ),
                     const SizedBox(height: 16),
