@@ -50,21 +50,23 @@ jobs:
             ~/.gradle/wrapper
             android/.gradle
             build/app/intermediates
+            build/app/outputs
           key: ${{ runner.os }}-gradle-${{ hashFiles('android/build.gradle', 'android/app/build.gradle', 'pubspec.lock') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Cache Android CMake and NDK
+      - name: Cache Android SDK tools (CMake, NDK)
         uses: actions/cache@v4
         with:
           path: |
-            ${{ env.ANDROID_HOME }}/cmake
-            ${{ env.ANDROID_HOME }}/ndk
+            /usr/local/lib/android/sdk/cmake
+            /usr/local/lib/android/sdk/ndk
+            /usr/local/lib/android/sdk/build-tools
             android/.cxx
             build/app/intermediates/cxx
-          key: ${{ runner.os }}-android-cmake-ndk-3.22.1
+          key: ${{ runner.os }}-android-sdk-cmake3.22.1-v2
           restore-keys: |
-            ${{ runner.os }}-android-cmake-ndk-
+            ${{ runner.os }}-android-sdk-
 
       - name: Get Dependencies
         run: flutter pub get
