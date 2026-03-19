@@ -20,8 +20,15 @@ class TipoPagoModel {
       return false;
     }
 
+    int safeInt(dynamic value) {
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return TipoPagoModel(
-      id: json['id'] as int,
+      id: safeInt(json['id']),
       nombre: json['nombre'] as String,
       afectaSaldo: parseBool(json['afectaSaldo']),
       activo: parseBool(json['activo']),

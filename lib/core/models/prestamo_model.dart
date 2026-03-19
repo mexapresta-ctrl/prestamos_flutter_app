@@ -32,6 +32,13 @@ class PrestamoModel {
       return false;
     }
 
+    int safeInt(dynamic value) {
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return PrestamoModel(
       id: json['id'] as String,
       codigo: json['codigo'] as String?,
@@ -39,8 +46,8 @@ class PrestamoModel {
       cobradorId: json['cobradorId'] as String? ?? json['cobrador_id'] as String,
       monto: (json['monto'] as num?) ?? 0.0,
       cuotaSemanal: (json['cuota_semanal'] as num?) ?? (json['cuotaSemanal'] as num?) ?? 0.0,
-      cuotasTotales: (json['cuotas_totales'] as int?) ?? (json['cuotasTotales'] as int?) ?? 0,
-      cuotasPagadas: (json['cuotas_pagadas'] as int?) ?? (json['cuotasPagadas'] as int?) ?? 0,
+      cuotasTotales: safeInt(json['cuotas_totales'] ?? json['cuotasTotales']),
+      cuotasPagadas: safeInt(json['cuotas_pagadas'] ?? json['cuotasPagadas']),
       estado: (json['estado'] as String?) ?? 'activo',
       activo: parseBool(json['activo']),
       createdAt: json['created_at'] != null 
