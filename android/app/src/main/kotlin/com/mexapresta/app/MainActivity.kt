@@ -1,4 +1,4 @@
-package com.example.prestamos_app
+package com.mexapresta.app
 
 import io.flutter.embedding.android.FlutterActivity
 

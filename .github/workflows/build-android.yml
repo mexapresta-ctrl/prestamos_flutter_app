@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Deploy Android APK
 on:
   push:
     branches:
@@ -7,46 +7,16 @@ on:
 
 jobs:
   build:
-    name: Build APK
+    name: Build & Release Secure APK
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Auto-bump version
-        id: version
-        run: |
-          # Get current version from pubspec.yaml
-          CURRENT=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
-          MAJOR=$(echo $CURRENT | cut -d. -f1)
-          MINOR=$(echo $CURRENT | cut -d. -f2)
-          PATCH=$(echo $CURRENT | cut -d. -f3)
-          
-          # Get latest release tag to auto-increment
-          LATEST_TAG=$(git tag --sort=-v:refname | head -n1 | sed 's/v//')
-          if [ -n "$LATEST_TAG" ]; then
-            LATEST_PATCH=$(echo $LATEST_TAG | cut -d. -f3)
-            if [ "$LATEST_PATCH" -ge "$PATCH" ] 2>/dev/null; then
-              PATCH=$((LATEST_PATCH + 1))
-            fi
-          fi
-          
-          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-          BUILD_NUM=${{ github.run_number }}
-          
-          # Update pubspec.yaml with new version
-          sed -i "s/^version: .*/version: $NEW_VERSION+$BUILD_NUM/" pubspec.yaml
-          
-          echo "VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Auto-bumped to: $NEW_VERSION+$BUILD_NUM"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -61,16 +31,6 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Cache Flutter pub packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: ${{ runner.os }}-pub-v3-${{ hashFiles('pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-v3-
-
       - name: Cache Gradle build
         uses: actions/cache@v4
         with:
@@ -78,44 +38,35 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             android/.gradle
-          key: ${{ runner.os }}-gradle-v4-${{ hashFiles('android/build.gradle.kts', 'android/app/build.gradle.kts', 'pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-v4-
-
-      - name: Cache Android SDK tools (CMake, NDK)
-        uses: actions/cache@v4
-        with:
-          path: |
-            /usr/local/lib/android/sdk/cmake
-            /usr/local/lib/android/sdk/ndk
-          key: ${{ runner.os }}-android-sdk-cmake3.22.1-v4
-          restore-keys: |
-            ${{ runner.os }}-android-sdk-v4-
-
-      - name: Decode Keystore
-        run: base64 -d android/app/keystore.b64 > android/app/mexapresta.jks
-
-      - name: Create key.properties
-        run: |
-          cat > android/key.properties << EOF
-          storePassword=MexaPresta2024Secure
-          keyPassword=MexaPresta2024Secure
-          keyAlias=mexapresta
-          storeFile=mexapresta.jks
-          EOF
+          key: ${{ runner.os }}-gradle-v4-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Release APK
-        run: flutter build apk --release --split-per-abi --target-platform android-arm64
+      - name: Build Signed Release APK
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          # Build APK which implicitly decodes keystore in build.gradle.kts
+          flutter build apk --release --split-per-abi --target-platform android-arm64
+          # Delete keystore traces after secure build
+          rm -f android/app/mexapresta-release.jks
+
+      - name: Auto-bump version
+        id: version
+        run: |
+          CURRENT=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          NEW_VERSION="$CURRENT+${{ github.run_number }}"
+          echo "VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Create GH Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v${{ steps.version.outputs.VERSION }}"
           name: "MexaPresta v${{ steps.version.outputs.VERSION }}"
-          body: |
-            Actualización automática v${{ steps.version.outputs.VERSION }}
+          body: "Compilación de producción firmada con clave de seguridad v${{ steps.version.outputs.VERSION }}"
           files: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
           make_latest: true

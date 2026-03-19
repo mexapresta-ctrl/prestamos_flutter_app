@@ -1,5 +1,7 @@
 import java.util.Properties
 import java.io.FileInputStream
+import java.util.Base64
+import java.io.File
 
 plugins {
     id("com.android.application")
@@ -16,7 +18,7 @@ if (keyPropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.example.prestamos_app"
+    namespace = "com.mexapresta.app"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -30,7 +32,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.prestamos_app"
+        applicationId = "com.mexapresta.app"
         minSdk = 24
         targetSdk = 35
         versionCode = flutter.versionCode
@@ -38,23 +40,26 @@ android {
     }
 
     signingConfigs {
-        if (keyPropertiesFile.exists()) {
-            create("release") {
-                keyAlias = keyProperties["keyAlias"] as String
-                keyPassword = keyProperties["keyPassword"] as String
-                storeFile = file(keyProperties["storeFile"] as String)
-                storePassword = keyProperties["storePassword"] as String
+        create("release") {
+            val keystoreBase64 = System.getenv("KEYSTORE_BASE64")
+            if (keystoreBase64 != null && keystoreBase64.isNotEmpty()) {
+                val decodedBytes = Base64.getDecoder().decode(keystoreBase64)
+                val keystoreFile = file("mexapresta-release.jks")
+                keystoreFile.writeBytes(decodedBytes)
+                storeFile = keystoreFile
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            } else {
+                // Si no hay variables, usa el de debug para evitar fallos locales
+                storeFile = file("debug.keystore")
             }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = if (keyPropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
         }
