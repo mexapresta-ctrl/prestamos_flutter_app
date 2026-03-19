@@ -406,7 +406,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                                   alignment: Alignment.bottomCenter,
                                                   transform: Matrix4.identity()
                                                     ..rotateZ(rotation)
-                                                    ..scale(scale),
+                                                    ..multiply(Matrix4.diagonal3Values(scale, scale, 1.0)),
                                                   child: child,
                                                 );
                                               },

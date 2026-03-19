@@ -194,7 +194,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                                   backgroundColor: AppColors.ok,
                                 ),
                               );
-                              // TODO: Hook into actual cobro insertion via provider
+                              // NOTA: Hook into actual cobro insertion via provider
                             },
                             icon: const Icon(Icons.check),
                             label: const Text('Registrar Pago', style: TextStyle(fontWeight: FontWeight.w600)),

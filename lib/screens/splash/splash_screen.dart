@@ -210,7 +210,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               builder: (context, child) {
                 return Transform(
                   alignment: Alignment.centerRight,
-                  transform: Matrix4.identity()..scale(_stripeScale.value, 1.0),
+                  transform: Matrix4.diagonal3Values(_stripeScale.value, 1.0, 1.0),
                   child: const _TricolorStripe(height: 3),
                 );
               },
@@ -227,7 +227,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               builder: (context, child) {
                 return Transform(
                   alignment: Alignment.centerLeft,
-                  transform: Matrix4.identity()..scale(_stripeScale.value, 1.0),
+                  transform: Matrix4.diagonal3Values(_stripeScale.value, 1.0, 1.0),
                   child: const _TricolorStripe(height: 4),
                 );
               },
@@ -277,7 +277,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                       shape: BoxShape.circle,
                                       gradient: RadialGradient(
                                         colors: [
-                                          const Color(0xFF006847).withOpacity(0.07),
+                                          const Color(0xFF006847).withValues(alpha: 0.07),
                                           Colors.transparent,
                                         ],
                                         stops: const [0.0, 0.7],
@@ -379,9 +379,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                           decoration: BoxDecoration(
                                             gradient: LinearGradient(
                                               colors: [
-                                                const Color(0xFF006847).withOpacity(0.0),
+                                                const Color(0xFF006847).withValues(alpha: 0.0),
                                                 const Color(0xFF10B981),
-                                                const Color(0xFF006847).withOpacity(0.0),
+                                                const Color(0xFF006847).withValues(alpha: 0.0),
                                               ],
                                               stops: const [0.0, 0.5, 1.0],
                                             ),
@@ -522,7 +522,7 @@ class _AtmosphericBackgroundPainter extends CustomPainter {
     // Top-Left Green Gradient
     final paint1 = Paint()
       ..shader = RadialGradient(
-        colors: [const Color(0xFF006847).withOpacity(0.05), Colors.transparent],
+        colors: [const Color(0xFF006847).withValues(alpha: 0.05), Colors.transparent],
         stops: const [0.0, 0.65],
       ).createShader(Rect.fromCenter(
           center: Offset(size.width * 0.15, size.height * 0.20),
@@ -533,7 +533,7 @@ class _AtmosphericBackgroundPainter extends CustomPainter {
     // Bottom-Right Red Gradient
     final paint2 = Paint()
       ..shader = RadialGradient(
-        colors: [const Color(0xFFCE1126).withOpacity(0.04), Colors.transparent],
+        colors: [const Color(0xFFCE1126).withValues(alpha: 0.04), Colors.transparent],
         stops: const [0.0, 0.65],
       ).createShader(Rect.fromCenter(
           center: Offset(size.width * 0.88, size.height * 0.85),
@@ -544,7 +544,7 @@ class _AtmosphericBackgroundPainter extends CustomPainter {
     // Center Gold Gradient
     final paint3 = Paint()
       ..shader = RadialGradient(
-        colors: [const Color(0xFFC8960C).withOpacity(0.03), Colors.transparent],
+        colors: [const Color(0xFFC8960C).withValues(alpha: 0.03), Colors.transparent],
         stops: const [0.0, 0.60],
       ).createShader(Rect.fromCenter(
           center: Offset(size.width * 0.50, size.height * 0.50),

@@ -212,7 +212,7 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
 
     return PopScope(
       canPop: _currentIndex == 0,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
           setState(() {
             _currentIndex = 0;
