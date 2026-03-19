@@ -21,9 +21,9 @@ class UpdateScreen extends StatefulWidget {
 class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMixin {
   bool _isDownloading = false;
   bool _done = false;
-  double _progress = 0;
-  bool _progressKnown = false;
-  int _receivedBytes = 0;
+  
+  // Isolate download progress to avoid rebuilding the entire screen
+  final ValueNotifier<Map<String, dynamic>> _downloadState = ValueNotifier({'received': 0, 'total': 0, 'progress': 0.0});
   String? _localPath;
 
   String _currentVersion = 'v1.0.0';
@@ -169,6 +169,7 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
     _dotBlinkController.dispose();
     _fadeUpController.dispose();
     _successController.dispose();
+    _downloadState.dispose();
     super.dispose();
   }
 
@@ -180,12 +181,10 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
   }
 
   Future<void> _startDownload() async {
+    _downloadState.value = {'received': 0, 'total': 0, 'progress': 0.0};
     setState(() {
       _isDownloading = true;
       _done = false;
-      _progress = 0;
-      _progressKnown = false;
-      _receivedBytes = 0;
     });
 
     try {
@@ -203,16 +202,15 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
         savePath,
         onReceiveProgress: (received, total) {
           if (!mounted) return;
-          _receivedBytes = received;
-          if (total > 0) {
-            _progressKnown = true;
-            _progress = received / total;
-          }
-          // Throttle UI updates to max once per 200ms to prevent flickering
+          
           final now = DateTime.now();
-          if (now.difference(lastUpdate).inMilliseconds > 200 || received == total) {
+          if (now.difference(lastUpdate).inMilliseconds > 100 || received == total) {
             lastUpdate = now;
-            setState(() {});
+            _downloadState.value = {
+              'received': received,
+              'total': total,
+              'progress': total > 0 ? (received / total) : 0.0,
+            };
           }
         },
         options: Options(
@@ -228,8 +226,6 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
         _localPath = savePath;
         _isDownloading = false;
         _done = true;
-        _progress = 1.0;
-        _progressKnown = true;
       });
       
       _successController.forward(from: 0.0);
@@ -241,7 +237,6 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
       if (mounted) {
         setState(() {
           _isDownloading = false;
-          _progress = 0;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error en la descarga: $e')),
@@ -570,47 +565,57 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
                           if (_isDownloading)
                             Container(
                               margin: const EdgeInsets.only(bottom: 22),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              child: ValueListenableBuilder<Map<String, dynamic>>(
+                                valueListenable: _downloadState,
+                                builder: (context, state, child) {
+                                  final int received = state['received'] ?? 0;
+                                  final int total = state['total'] ?? 0;
+                                  final double progress = state['progress'] ?? 0.0;
+                                  final bool isKnown = total > 0;
+
+                                  return Column(
                                     children: [
-                                      Text(
-                                        'Descargando actualización...',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF6B7280),
-                                        ),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Descargando actualización...',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xFF6B7280),
+                                            ),
+                                          ),
+                                          Text(
+                                            isKnown ? '${(progress * 100).toInt()}%' : _formatBytes(received),
+                                            style: GoogleFonts.inter(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xFF6B7280),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      Text(
-                                        _progressKnown ? '${(_progress * 100).toInt()}%' : _formatBytes(_receivedBytes),
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF6B7280),
+                                      const SizedBox(height: 7),
+                                      SizedBox(
+                                        height: 6,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(99),
+                                          child: isKnown
+                                              ? LinearProgressIndicator(
+                                                  value: progress,
+                                                  backgroundColor: const Color(0xFFE5E7EB),
+                                                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                                                )
+                                              : const LinearProgressIndicator(
+                                                  backgroundColor: Color(0xFFE5E7EB),
+                                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                                                ),
                                         ),
                                       ),
                                     ],
-                                  ),
-                                  const SizedBox(height: 7),
-                                  SizedBox(
-                                    height: 6,
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(99),
-                                      child: _progressKnown
-                                          ? LinearProgressIndicator(
-                                              value: _progress,
-                                              backgroundColor: const Color(0xFFE5E7EB),
-                                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
-                                            )
-                                          : const LinearProgressIndicator(
-                                              backgroundColor: Color(0xFFE5E7EB),
-                                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
-                                            ),
-                                    ),
-                                  ),
-                                ],
+                                  );
+                                },
                               ),
                             ),
 
