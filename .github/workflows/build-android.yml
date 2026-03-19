@@ -38,9 +38,9 @@ jobs:
           path: |
             ~/.pub-cache
             .dart_tool
-          key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
+          key: ${{ runner.os }}-pub-v3-${{ hashFiles('pubspec.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pub-
+            ${{ runner.os }}-pub-v3-
 
       - name: Cache Gradle build
         uses: actions/cache@v4
@@ -51,9 +51,9 @@ jobs:
             android/.gradle
             build/app/intermediates
             build/app/outputs
-          key: ${{ runner.os }}-gradle-${{ hashFiles('android/build.gradle', 'android/app/build.gradle', 'pubspec.lock') }}
+          key: ${{ runner.os }}-gradle-v3-${{ hashFiles('android/build.gradle', 'android/app/build.gradle', 'pubspec.lock') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-
+            ${{ runner.os }}-gradle-v3-
 
       - name: Cache Android SDK tools (CMake, NDK)
         uses: actions/cache@v4
@@ -64,9 +64,9 @@ jobs:
             /usr/local/lib/android/sdk/build-tools
             android/.cxx
             build/app/intermediates/cxx
-          key: ${{ runner.os }}-android-sdk-cmake3.22.1-v2
+          key: ${{ runner.os }}-android-sdk-cmake3.22.1-v3
           restore-keys: |
-            ${{ runner.os }}-android-sdk-
+            ${{ runner.os }}-android-sdk-v3-
 
       - name: Get Dependencies
         run: flutter pub get
