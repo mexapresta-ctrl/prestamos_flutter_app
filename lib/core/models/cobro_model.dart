@@ -4,7 +4,7 @@ class CobroModel {
   final String clienteId;
   final String cobradorId;
   final num monto;
-  final String? fechaCobro; // Usually ISO 8601 string
+  final String? fechaCobro;
 
   CobroModel({
     required this.id,
@@ -17,13 +17,12 @@ class CobroModel {
 
   factory CobroModel.fromJson(Map<String, dynamic> json) {
     return CobroModel(
-      id: json['id'] as String,
-      prestamoId: json['prestamoId'] as String? ?? json['prestamo_id'] as String,
-      clienteId: json['clienteId'] as String? ?? json['cliente_id'] as String,
-      cobradorId: json['cobradorId'] as String? ?? json['cobrador_id'] as String,
-      monto: (json['monto'] as num?) ?? 0.0,
-      // The original db used 'fecha' or 'fecha_cobro'
-      fechaCobro: json['fecha_cobro'] as String? ?? json['fechaCobro'] as String? ?? json['fecha'] as String?,
+      id: (json['id'] ?? '').toString(),
+      prestamoId: (json['prestamoId'] ?? json['prestamo_id'] ?? '').toString(),
+      clienteId: (json['clienteId'] ?? json['cliente_id'] ?? '').toString(),
+      cobradorId: (json['cobradorId'] ?? json['cobrador_id'] ?? '').toString(),
+      monto: (json['monto'] is num) ? json['monto'] : num.tryParse(json['monto']?.toString() ?? '0') ?? 0,
+      fechaCobro: (json['fecha_cobro'] ?? json['fechaCobro'] ?? json['fecha'])?.toString(),
     );
   }
 }

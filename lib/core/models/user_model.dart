@@ -16,13 +16,22 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    bool safeBool(dynamic value) {
+      if (value is bool) return value;
+      if (value is int) return value == 1;
+      if (value is String) return value.toLowerCase() == 'true';
+      return true;
+    }
+
     return UserModel(
-      id: json['id'] as String,
-      nombre: json['nombre'] as String,
-      usuario: json['usuario'] as String,
-      rol: json['rol'] as String,
-      activo: json['activo'] as bool? ?? true,
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : null,
+      id: (json['id'] ?? '').toString(),
+      nombre: (json['nombre'] ?? '').toString(),
+      usuario: (json['usuario'] ?? '').toString(),
+      rol: (json['rol'] ?? '').toString(),
+      activo: safeBool(json['activo']),
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
     );
   }
 

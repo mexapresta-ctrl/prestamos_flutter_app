@@ -26,12 +26,6 @@ class PrestamoModel {
   });
 
   factory PrestamoModel.fromJson(Map<String, dynamic> json) {
-    bool parseBool(dynamic value) {
-      if (value is bool) return value;
-      if (value is int) return value == 1;
-      return false;
-    }
-
     int safeInt(dynamic value) {
       if (value is int) return value;
       if (value is num) return value.toInt();
@@ -39,19 +33,32 @@ class PrestamoModel {
       return 0;
     }
 
+    num safeNum(dynamic value) {
+      if (value is num) return value;
+      if (value is String) return num.tryParse(value) ?? 0;
+      return 0;
+    }
+
+    bool safeBool(dynamic value) {
+      if (value is bool) return value;
+      if (value is int) return value == 1;
+      if (value is String) return value.toLowerCase() == 'true';
+      return false;
+    }
+
     return PrestamoModel(
-      id: json['id'] as String,
-      codigo: json['codigo'] as String?,
-      clienteId: json['clienteId'] as String? ?? json['cliente_id'] as String,
-      cobradorId: json['cobradorId'] as String? ?? json['cobrador_id'] as String,
-      monto: (json['monto'] as num?) ?? 0.0,
-      cuotaSemanal: (json['cuota_semanal'] as num?) ?? (json['cuotaSemanal'] as num?) ?? 0.0,
+      id: (json['id'] ?? '').toString(),
+      codigo: json['codigo']?.toString(),
+      clienteId: (json['clienteId'] ?? json['cliente_id'] ?? '').toString(),
+      cobradorId: (json['cobradorId'] ?? json['cobrador_id'] ?? '').toString(),
+      monto: safeNum(json['monto']),
+      cuotaSemanal: safeNum(json['cuota_semanal'] ?? json['cuotaSemanal']),
       cuotasTotales: safeInt(json['cuotas_totales'] ?? json['cuotasTotales']),
       cuotasPagadas: safeInt(json['cuotas_pagadas'] ?? json['cuotasPagadas']),
-      estado: (json['estado'] as String?) ?? 'activo',
-      activo: parseBool(json['activo']),
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'] as String) 
+      estado: (json['estado'] ?? 'activo').toString(),
+      activo: safeBool(json['activo']),
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
     );
   }

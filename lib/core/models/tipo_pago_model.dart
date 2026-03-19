@@ -12,14 +12,6 @@ class TipoPagoModel {
   });
 
   factory TipoPagoModel.fromJson(Map<String, dynamic> json) {
-    // Handling SQLite boolean mapping (1 = true, 0 = false) if necessary
-    // Supabase native booleans will just be boolean
-    bool parseBool(dynamic value) {
-      if (value is bool) return value;
-      if (value is int) return value == 1;
-      return false;
-    }
-
     int safeInt(dynamic value) {
       if (value is int) return value;
       if (value is num) return value.toInt();
@@ -27,11 +19,18 @@ class TipoPagoModel {
       return 0;
     }
 
+    bool safeBool(dynamic value) {
+      if (value is bool) return value;
+      if (value is int) return value == 1;
+      if (value is String) return value.toLowerCase() == 'true';
+      return false;
+    }
+
     return TipoPagoModel(
       id: safeInt(json['id']),
-      nombre: json['nombre'] as String,
-      afectaSaldo: parseBool(json['afectaSaldo']),
-      activo: parseBool(json['activo']),
+      nombre: (json['nombre'] ?? '').toString(),
+      afectaSaldo: safeBool(json['afectaSaldo'] ?? json['afecta_saldo']),
+      activo: safeBool(json['activo']),
     );
   }
 }
