@@ -92,15 +92,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-android-sdk-v4-
 
-      - name: Generate signing keystore
-        run: |
-          keytool -genkey -v \
-            -keystore android/app/mexapresta-release.jks \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -alias mexapresta \
-            -storepass MexaPresta2024Secure \
-            -keypass MexaPresta2024Secure \
-            -dname "CN=MexaPresta, OU=Dev, O=MexaPresta, L=Mexico, ST=CDMX, C=MX"
+      - name: Decode Keystore
+        run: base64 -d android/app/keystore.b64 > android/app/mexapresta.jks
 
       - name: Create key.properties
         run: |
@@ -108,7 +101,7 @@ jobs:
           storePassword=MexaPresta2024Secure
           keyPassword=MexaPresta2024Secure
           keyAlias=mexapresta
-          storeFile=mexapresta-release.jks
+          storeFile=mexapresta.jks
           EOF
 
       - name: Get Dependencies
