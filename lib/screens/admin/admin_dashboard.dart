@@ -11,6 +11,7 @@ import 'views/admin_settings_view.dart';
 import 'views/admin_prestamos_view.dart';
 import 'views/admin_cobrador_detalle_view.dart';
 import 'package:intl/intl.dart';
+import '../../core/utils/time_util.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
   const AdminDashboard({super.key});
@@ -217,7 +218,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   }
 
   Widget _buildHomeView(AsyncValue<AdminDashboardData> adminState, UserModel? user, NumberFormat formatCurrency) {
-    final hoy = DateTime.now().toIso8601String().substring(0, 10);
+    final hoy = TimeUtil.todayIsoDate();
 
     return SafeArea(
       child: SingleChildScrollView(

@@ -6,6 +6,7 @@ import '../../../theme/app_typography.dart';
 import '../../../core/providers/admin_provider.dart';
 import '../../../widgets/list_card.dart';
 import '../../../widgets/hero_card.dart' show Role;
+import '../../../core/utils/time_util.dart';
 
 class AdminPagosView extends ConsumerStatefulWidget {
   const AdminPagosView({super.key});
@@ -36,8 +37,8 @@ class _AdminPagosViewState extends ConsumerState<AdminPagosView> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.error))),
         data: (data) {
-          final now = DateTime.now();
-          final hoy = now.toIso8601String().substring(0, 10);
+          final now = TimeUtil.now();
+          final hoy = TimeUtil.todayIsoDate();
           final inicioSemana = now.subtract(Duration(days: now.weekday - 1));
           final inicioMes = DateTime(now.year, now.month, 1);
 

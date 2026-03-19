@@ -6,6 +6,7 @@ import '../models/cobro_model.dart';
 import '../models/cliente_model.dart';
 import '../models/tipo_pago_model.dart';
 import '../providers/auth_provider.dart';
+import '../utils/time_util.dart';
 
 class CobradorState {
   final List<PrestamoModel> prestamos;
@@ -76,9 +77,8 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
     }
 
     // 4. Fetch Cobros de Hoy
-    final now = DateTime.now();
-    // Padding with leading zeros for generic matching (e.g. 2024-03-12)
-    final hoyStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}'; 
+    final now = TimeUtil.now();
+    final hoyStr = TimeUtil.todayIsoDate(); 
 
     // We query all cobros by this cobrador and filter in memory by today's date
     // to mimic the web app's `c.fecha.startsWith(hoy)` logic consistently.
@@ -91,7 +91,7 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
     final cobrosHoy = todosCobros.where((c) {
       if (c.fechaCobro == null) return false;
       try {
-        final date = DateTime.parse(c.fechaCobro!).toLocal();
+        final date = TimeUtil.parse(c.fechaCobro!);
         return date.year == now.year && date.month == now.month && date.day == now.day;
       } catch (e) {
         return c.fechaCobro!.startsWith(hoyStr);
@@ -141,8 +141,8 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
         'monto': monto,
         'nombre_pago': tipoPago.nombre,
         'cuota_num': prestamo.cuotasPagadas + 1,
-        'fecha': DateTime.now().toIso8601String(),
-        'fecha_cobro': DateTime.now().toIso8601String(),
+        'fecha': TimeUtil.toIsoDb(),
+        'fecha_cobro': TimeUtil.toIsoDb(),
       });
 
       // 2. Opcional: Actualizar el avance del préstamo
@@ -156,7 +156,7 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
         'descripcion': '${user.nombre} registró [${tipoPago.nombre}] por \$${monto.toStringAsFixed(2)} para ${cliente.nombre}',
         'usuario': user.nombre,
         'rol': user.rol,
-        'fecha': DateTime.now().toIso8601String(),
+        'fecha': TimeUtil.toIsoDb(),
       });
 
       // 4. Recargar el state para reflejar el progreso

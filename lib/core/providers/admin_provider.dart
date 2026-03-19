@@ -3,6 +3,7 @@ import '../models/prestamo_model.dart';
 import '../models/cliente_model.dart';
 import '../models/cobro_model.dart';
 import '../config/supabase_config.dart';
+import '../utils/time_util.dart';
 
 class AdminDashboardData {
   final List<PrestamoModel> prestamos;
@@ -104,7 +105,7 @@ class AdminNotifier extends AsyncNotifier<AdminDashboardData> {
           .where((p) => ['activo', 'vencido', 'liquidado'].contains(p.estado))
           .fold(0.0, (sum, p) => sum + (p.cuotaSemanal * p.cuotasTotales));
 
-      final hoy = DateTime.now().toIso8601String().substring(0, 10);
+      final hoy = TimeUtil.todayIsoDate();
       final cobradoHoy = cobros
           .where((c) {
             if (c.fechaCobro == null) return false;

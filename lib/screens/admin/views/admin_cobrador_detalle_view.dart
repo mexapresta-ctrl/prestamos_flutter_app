@@ -6,6 +6,7 @@ import '../../../theme/app_typography.dart';
 import '../../../core/providers/admin_provider.dart';
 import '../../../widgets/list_card.dart';
 import '../../../widgets/hero_card.dart' show Role;
+import '../../../core/utils/time_util.dart';
 
 class AdminCobradorDetalleView extends ConsumerWidget {
   final Map<String, dynamic> cobrador;
@@ -19,7 +20,7 @@ class AdminCobradorDetalleView extends ConsumerWidget {
     final cobradorId = cobrador['id'].toString();
     final nombre = cobrador['nombre'] ?? 'Cobrador';
     final iniciales = cobrador['iniciales'] ?? nombre.substring(0, 2).toUpperCase();
-    final hoy = DateTime.now().toIso8601String().substring(0, 10);
+    final hoy = TimeUtil.todayIsoDate();
 
     return Scaffold(
       backgroundColor: AppColors.background,

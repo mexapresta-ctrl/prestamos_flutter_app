@@ -1,3 +1,5 @@
+import '../utils/time_util.dart';
+
 class PrestamoModel {
   final String id;
   final String? codigo;
@@ -58,8 +60,8 @@ class PrestamoModel {
       estado: (json['estado'] ?? 'activo').toString(),
       activo: safeBool(json['activo']),
       createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
-          : DateTime.now(),
+          ? TimeUtil.parse(json['created_at'].toString())
+          : TimeUtil.now(),
     );
   }
 }
