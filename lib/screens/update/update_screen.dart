@@ -197,21 +197,23 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
       final savePath = '${dir.path}/mexa-presta-update.apk';
 
       final dio = Dio();
+      DateTime lastUpdate = DateTime.now();
       await dio.download(
         widget.appUrl,
         savePath,
         onReceiveProgress: (received, total) {
           if (!mounted) return;
-          setState(() {
-            _receivedBytes = received;
-            if (total > 0) {
-              _progressKnown = true;
-              _progress = received / total;
-            } else {
-              _progressKnown = false;
-              // Simulamos un pequenio progreso visual o lo dejamos como indet.
-            }
-          });
+          _receivedBytes = received;
+          if (total > 0) {
+            _progressKnown = true;
+            _progress = received / total;
+          }
+          // Throttle UI updates to max once per 200ms to prevent flickering
+          final now = DateTime.now();
+          if (now.difference(lastUpdate).inMilliseconds > 200 || received == total) {
+            lastUpdate = now;
+            setState(() {});
+          }
         },
         options: Options(
           responseType: ResponseType.bytes,
