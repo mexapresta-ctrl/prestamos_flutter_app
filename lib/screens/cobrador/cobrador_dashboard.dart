@@ -169,8 +169,17 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
     final cobradorState = ref.watch(cobradorProvider);
     final formatCurrency = NumberFormat.simpleCurrency();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          setState(() {
+            _currentIndex = 0;
+          });
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -214,7 +223,7 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: _buildBottomNav(),
-    );
+    ));
   }
 
   // ── HOME VIEW ─────────────────────────────────────────────────────────────
@@ -634,16 +643,9 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                     label: 'Mi Ruta',
                     onTap: () => setState(() => _currentIndex = 1),
                   ),
-                  _buildPerfilItem(
-                    icon: Icons.cloud_download_outlined,
-                    label: 'Buscar Actualizaciones',
-                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Comprobando actualizaciones...'))),
-                  ),
                   const SizedBox(height: 32),
                   CustomButton(
-                    type: ButtonType.secondary,
+                    type: ButtonType.error,
                     text: 'Cerrar Sesión',
                     icon: Icons.logout,
                     onPressed: () => ref.read(authProvider.notifier).logout(),
@@ -742,13 +744,13 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                       decoration: BoxDecoration(
                         color: yaCobrado
                             ? AppColors.cobradorSurface
-                            : AppColors.infoSurface,
+                            : AppColors.warnSurface,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        yaCobrado ? 'Ok' : 'Pen',
+                        yaCobrado ? 'Ok' : 'PENDIENTE',
                         style: TextStyle(
-                          color: yaCobrado ? AppColors.cobrador : AppColors.info,
+                          color: yaCobrado ? AppColors.cobrador : AppColors.warn,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
