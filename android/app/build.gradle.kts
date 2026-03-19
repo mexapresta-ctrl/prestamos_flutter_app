@@ -43,7 +43,8 @@ android {
         create("release") {
             val keystoreBase64 = System.getenv("KEYSTORE_BASE64")
             if (keystoreBase64 != null && keystoreBase64.isNotEmpty()) {
-                val decodedBytes = Base64.getDecoder().decode(keystoreBase64)
+                // getMimeDecoder is used because GitHub Secrets format may contain line breaks
+                val decodedBytes = Base64.getMimeDecoder().decode(keystoreBase64)
                 val keystoreFile = file("mexapresta-release.jks")
                 keystoreFile.writeBytes(decodedBytes)
                 storeFile = keystoreFile
@@ -51,8 +52,8 @@ android {
                 keyAlias = System.getenv("KEY_ALIAS")
                 keyPassword = System.getenv("KEY_PASSWORD")
             } else {
-                // Si no hay variables, usa el de debug para evitar fallos locales
-                storeFile = file("debug.keystore")
+                // throw an error gracefully if secrets aren't set
+                throw GradleException("FATAL: GitHub Secrets for APK signature are MISSING! Please verify KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, and KEY_PASSWORD match EXACTLY on GitHub.")
             }
         }
     }
