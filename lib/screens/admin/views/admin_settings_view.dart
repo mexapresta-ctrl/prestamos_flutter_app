@@ -9,6 +9,9 @@ import 'admin_pagos_view.dart';
 import 'admin_equipo_view.dart';
 import 'admin_reportes_view.dart';
 
+import 'admin_modalidades_view.dart';
+import 'admin_prestamistas_view.dart';
+
 class AdminSettingsView extends ConsumerWidget {
   const AdminSettingsView({super.key});
 
@@ -84,14 +87,14 @@ class AdminSettingsView extends ConsumerWidget {
                     icon: Icons.calculate_outlined,
                     label: 'Modalidades',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Modalidades — Próximamente')));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminModalidadesView()));
                     },
                   ),
                   _buildActionCard(
                     icon: Icons.handshake_outlined,
                     label: 'Prestamistas',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Prestamistas — Próximamente')));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPrestamistasView()));
                     },
                   ),
                   _buildActionCard(

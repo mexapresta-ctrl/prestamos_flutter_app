@@ -140,13 +140,55 @@ class _AdminUsuariosViewState extends ConsumerState<AdminUsuariosView> with Sing
     );
   }
 
-  // Placeholder para Asesores 
   Widget _buildAsesoresList(AdminDashboardData data) {
-    return const Center(child: Text('Lista de Asesores (Próximamente)', style: TextStyle(color: AppColors.ink3)));
+    if (data.asesores.isEmpty) {
+      return const Center(child: Text('No hay asesores registrados', style: TextStyle(color: AppColors.ink3)));
+    }
+    
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: data.asesores.length,
+      itemBuilder: (context, index) {
+        final a = data.asesores[index];
+        return ListCard(
+          role: Role.admin,
+          title: a['nombre'] ?? 'Sin nombre',
+          subtitle: 'Usuario: ${a['usuario'] ?? ''}',
+          amount: '',
+          badge: RoleChip(
+            role: Role.asesor,
+            text: a['iniciales'] ?? 'AS',
+            icon: Icons.assignment_ind,
+          ),
+          icon: const Icon(Icons.assignment_ind_rounded, color: AppColors.asesor, size: 22),
+        );
+      },
+    );
   }
 
-  // Placeholder para Prestamistas
   Widget _buildPrestamistasList(AdminDashboardData data) {
-    return const Center(child: Text('Lista de Prestamistas (Próximamente)', style: TextStyle(color: AppColors.ink3)));
+    if (data.prestamistas.isEmpty) {
+      return const Center(child: Text('No hay prestamistas registrados', style: TextStyle(color: AppColors.ink3)));
+    }
+    
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: data.prestamistas.length,
+      itemBuilder: (context, index) {
+        final p = data.prestamistas[index];
+        return ListCard(
+          role: Role.admin,
+          title: p['nombre'] ?? 'Sin nombre',
+          subtitle: 'Usuario: ${p['usuario'] ?? ''}',
+          amount: '',
+          badge: RoleChip(
+            role: Role.admin,
+            text: p['iniciales'] ?? 'PR',
+            icon: Icons.account_balance,
+          ),
+          icon: const Icon(Icons.account_balance_rounded, color: AppColors.admin, size: 22),
+        );
+      },
+    );
   }
 }

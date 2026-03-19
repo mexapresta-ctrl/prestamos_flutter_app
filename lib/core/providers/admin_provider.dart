@@ -10,6 +10,7 @@ class AdminDashboardData {
   final List<CobroModel> cobros;
   final List<Map<String, dynamic>> cobradores;
   final List<Map<String, dynamic>> asesores;
+  final List<Map<String, dynamic>> prestamistas;
 
   // Calculados
   final double carteraTotal;
@@ -24,6 +25,7 @@ class AdminDashboardData {
     required this.cobros,
     required this.cobradores,
     required this.asesores,
+    required this.prestamistas,
     required this.carteraTotal,
     required this.cobradoHoy,
     required this.enMora,
@@ -87,6 +89,15 @@ class AdminNotifier extends AsyncNotifier<AdminDashboardData> {
           
       final asesores = List<Map<String, dynamic>>.from(asesoresRes);
 
+      // 6. Fetch Prestamistas (usuarios rol = prestamista)
+      final prestamistasRes = await SupabaseConfig.client
+          .from('usuarios')
+          .select('id, nombre, usuario, iniciales, rol')
+          .eq('rol', 'prestamista')
+          .eq('activo', true);
+          
+      final prestamistas = List<Map<String, dynamic>>.from(prestamistasRes);
+
       // --- CALCULATIONS ---
       
       final carteraTotal = prestamos
@@ -113,6 +124,7 @@ class AdminNotifier extends AsyncNotifier<AdminDashboardData> {
         cobros: cobros,
         cobradores: cobradores,
         asesores: asesores,
+        prestamistas: prestamistas,
         carteraTotal: carteraTotal,
         cobradoHoy: cobradoHoy,
         enMora: enMora,
