@@ -153,7 +153,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (updateInfo.isUpdateRequired && updateInfo.updateUrl != null) {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (_, _, _) => UpdateScreen(appUrl: updateInfo!.updateUrl!),
+          pageBuilder: (_, _, _) => const UpdateScreen(),
           transitionDuration: const Duration(milliseconds: 600),
           transitionsBuilder: (_, anim, _, child) => FadeTransition(opacity: anim, child: child),
         ),
