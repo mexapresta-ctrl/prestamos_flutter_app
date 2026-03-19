@@ -3,7 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:dio/dio.dart';
 
 // GitHub repo info
-const _githubRepo = 'leslyyareth866-code/prestamos_flutter_app';
+const _githubRepo = 'mexapresta-ctrl/prestamos_flutter_app';
 const _githubApkUrl =
     'https://github.com/$_githubRepo/releases/latest/download/app-arm64-v8a-release.apk';
 

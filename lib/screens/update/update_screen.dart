@@ -96,7 +96,7 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
     try {
       final dio = Dio();
       final res = await dio.get(
-        'https://api.github.com/repos/leslyyareth866-code/prestamos_flutter_app/releases/latest',
+        'https://api.github.com/repos/mexapresta-ctrl/prestamos_flutter_app/releases/latest',
         options: Options(receiveTimeout: const Duration(seconds: 5)),
       );
       if (res.statusCode == 200 && res.data != null) {
