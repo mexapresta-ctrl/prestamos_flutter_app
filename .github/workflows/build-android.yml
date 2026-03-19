@@ -19,6 +19,33 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Auto-bump version
+        id: version
+        run: |
+          # Get current version from pubspec.yaml
+          CURRENT=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          MAJOR=$(echo $CURRENT | cut -d. -f1)
+          MINOR=$(echo $CURRENT | cut -d. -f2)
+          PATCH=$(echo $CURRENT | cut -d. -f3)
+          
+          # Get latest release tag to auto-increment
+          LATEST_TAG=$(git tag --sort=-v:refname | head -n1 | sed 's/v//')
+          if [ -n "$LATEST_TAG" ]; then
+            LATEST_PATCH=$(echo $LATEST_TAG | cut -d. -f3)
+            if [ "$LATEST_PATCH" -ge "$PATCH" ] 2>/dev/null; then
+              PATCH=$((LATEST_PATCH + 1))
+            fi
+          fi
+          
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          BUILD_NUM=${{ github.run_number }}
+          
+          # Update pubspec.yaml with new version
+          sed -i "s/^version: .*/version: $NEW_VERSION+$BUILD_NUM/" pubspec.yaml
+          
+          echo "VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Auto-bumped to: $NEW_VERSION+$BUILD_NUM"
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -84,13 +111,6 @@ jobs:
 
       - name: Get Dependencies
         run: flutter pub get
-
-      - name: Extract version from pubspec.yaml
-        id: version
-        run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Detected version: $VERSION"
 
       - name: Build Release APK
         run: flutter build apk --release --split-per-abi --target-platform android-arm64
