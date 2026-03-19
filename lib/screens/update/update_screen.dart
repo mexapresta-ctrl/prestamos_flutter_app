@@ -32,7 +32,6 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
   bool _isLoadingInfo = true;
 
   late AnimationController _badgePulseController;
-  late Animation<double> _badgePulse;
 
   late AnimationController _dotBlinkController;
   late Animation<double> _dotBlink;
@@ -51,10 +50,6 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
     _badgePulseController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 2500))
       ..repeat(reverse: false);
-    _badgePulse = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-      parent: _badgePulseController,
-      curve: Curves.easeInOut,
-    ));
 
     _dotBlinkController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1200))
@@ -80,7 +75,10 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
       duration: const Duration(milliseconds: 1200),
     );
 
-    _fadeUpController.forward();
+    // Delay fade-up to let layout settle and avoid visual glitches
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _fadeUpController.forward();
+    });
 
     _initInfo();
   }
@@ -423,62 +421,50 @@ class _UpdateScreenState extends State<UpdateScreen> with TickerProviderStateMix
                           ),
                           const SizedBox(height: 24),
 
-                          // BADGE
-                          AnimatedBuilder(
-                            animation: _badgePulse,
-                            builder: (context, child) {
-                              double pulse = math.sin(_badgePulse.value * math.pi);
-                              return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(99),
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
+                          // BADGE — fixed: no spreading shadow to avoid distortion
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(99),
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              border: Border.all(color: const Color(0xFFA7F3D0)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                AnimatedBuilder(
+                                  animation: _dotBlink,
+                                  builder: (context, child) {
+                                    return Opacity(
+                                      opacity: _dotBlink.value,
+                                      child: child,
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 7,
+                                    height: 7,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF10B981),
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
-                                  border: Border.all(color: const Color(0xFFA7F3D0)),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF10B981).withOpacity(0.2 * (1 - pulse)),
-                                      spreadRadius: 6 * pulse,
-                                    )
-                                  ],
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    AnimatedBuilder(
-                                      animation: _dotBlink,
-                                      builder: (context, child) {
-                                        return Opacity(
-                                          opacity: _dotBlink.value,
-                                          child: child,
-                                        );
-                                      },
-                                      child: Container(
-                                        width: 7,
-                                        height: 7,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF10B981),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 7),
-                                    Text(
-                                      "ACTUALIZACIÓN DISPONIBLE",
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF065F46),
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ],
+                                const SizedBox(width: 7),
+                                Text(
+                                  "ACTUALIZACIÓN DISPONIBLE",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF065F46),
+                                    letterSpacing: 0.5,
+                                  ),
                                 ),
-                              );
-                            },
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 20),
 
