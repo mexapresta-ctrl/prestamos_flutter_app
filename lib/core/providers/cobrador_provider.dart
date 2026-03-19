@@ -62,7 +62,8 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
         .select()
         .eq('cobrador_id', user.id)
         .eq('estado', 'activo')
-        .eq('activo', true);
+        .eq('activo', true)
+        .order('id');
     
     final prestamos = prestamosData.map((e) => PrestamoModel.fromJson(e)).toList();
 
@@ -88,8 +89,13 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
         
     final todosCobros = cobrosData.map((e) => CobroModel.fromJson(e)).toList();
     final cobrosHoy = todosCobros.where((c) {
-      final dateStr = c.fechaCobro ?? '';
-      return dateStr.startsWith(hoyStr);
+      if (c.fechaCobro == null) return false;
+      try {
+        final date = DateTime.parse(c.fechaCobro!).toLocal();
+        return date.year == now.year && date.month == now.month && date.day == now.day;
+      } catch (e) {
+        return c.fechaCobro!.startsWith(hoyStr);
+      }
     }).toList();
 
     // 5. Cálculos (KPIs)

@@ -61,9 +61,7 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                       );
                   if (context.mounted) {
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Cobro registrado exitosamente')),
-                    );
+                    _showSuccessAnimation(context);
                   }
                 } catch (e) {
                   if (context.mounted) {
@@ -155,6 +153,49 @@ class _CobradorDashboardState extends ConsumerState<CobradorDashboard> {
                     ),
                   ),
                 ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showSuccessAnimation(BuildContext ctx) {
+    showDialog(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (context) {
+        Future.delayed(const Duration(milliseconds: 1800), () {
+          if (context.mounted) Navigator.of(context).pop();
+        });
+        return TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 600),
+          tween: Tween(begin: 0.0, end: 1.0),
+          curve: Curves.elasticOut,
+          builder: (context, val, child) {
+            return Transform.scale(
+              scale: val,
+              child: AlertDialog(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: const BoxDecoration(
+                        color: AppColors.okSurface,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check_circle, size: 60, color: AppColors.ok),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('¡Pago Registrado!', style: TextStyle(
+                       fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.ink
+                    )),
+                  ],
+                ),
               ),
             );
           },
