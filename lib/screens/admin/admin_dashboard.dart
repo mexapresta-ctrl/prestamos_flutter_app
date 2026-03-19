@@ -109,7 +109,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                       const Text('Cliente', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.ink2)),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: selectedClienteId,
+                        initialValue: selectedClienteId,
                         decoration: InputDecoration(
                           hintText: 'Seleccionar cliente',
                           filled: true,
@@ -137,7 +137,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                           )
                         else
                           DropdownButtonFormField<String>(
-                            value: selectedPrestamoId,
+                            initialValue: selectedPrestamoId,
                             decoration: InputDecoration(
                               hintText: 'Seleccionar préstamo',
                               filled: true,

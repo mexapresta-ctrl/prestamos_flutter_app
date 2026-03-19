@@ -66,21 +66,3 @@ jobs:
             Actualización automática v${{ steps.version.outputs.VERSION }}
           files: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
           make_latest: true
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Supabase JS Client
-        run: npm install @supabase/supabase-js
-        working-directory: .github/scripts
-
-      - name: Update Supabase min_version
-        working-directory: .github/scripts
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          APP_VERSION: ${{ steps.version.outputs.VERSION }}
-          REPO: ${{ github.repository }}
-        run: node update_supabase.js

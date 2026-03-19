@@ -1,71 +1,83 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../config/supabase_config.dart';
+import 'package:dio/dio.dart';
 
-// URL base del APK en GitHub Releases.
-// Esto siempre apunta a la release más reciente.
+// GitHub repo info
+const _githubRepo = 'leslyyareth866-code/prestamos_flutter_app';
 const _githubApkUrl =
-    'https://github.com/leslyyareth866-code/prestamos_flutter_app/releases/latest/download/app-arm64-v8a-release.apk';
+    'https://github.com/$_githubRepo/releases/latest/download/app-arm64-v8a-release.apk';
 
 class AppUpdateInfo {
   final bool isUpdateRequired;
   final String? updateUrl;
+  final String? latestVersion;
 
-  AppUpdateInfo({required this.isUpdateRequired, this.updateUrl});
+  AppUpdateInfo({required this.isUpdateRequired, this.updateUrl, this.latestVersion});
 }
 
 final updateProvider = FutureProvider<AppUpdateInfo>((ref) async {
   try {
-    final response = await SupabaseConfig.client
-        .from('app_config')
-        .select('*')
-        .inFilter('key', ['min_version', 'apk_url']);
+    // 1. Get current app version
+    final packageInfo = await PackageInfo.fromPlatform();
+    final currentVersion = packageInfo.version; // e.g. "1.0.27"
 
-    if (response.isEmpty) {
+    // 2. Check latest release from GitHub API
+    final dio = Dio();
+    final res = await dio.get(
+      'https://api.github.com/repos/$_githubRepo/releases/latest',
+      options: Options(
+        receiveTimeout: const Duration(seconds: 8),
+        headers: {'Accept': 'application/vnd.github.v3+json'},
+      ),
+    );
+
+    if (res.statusCode != 200 || res.data == null) {
       return AppUpdateInfo(isUpdateRequired: false);
     }
 
-    String? minVersionStr;
-    String? apkUrl;
+    // 3. Parse latest version from tag (e.g. "v1.0.28" -> "1.0.28")
+    final tagName = res.data['tag_name']?.toString() ?? '';
+    final latestVersion = tagName.startsWith('v') ? tagName.substring(1) : tagName;
 
-    for (var row in response) {
-      if (row['key'] == 'min_version') minVersionStr = row['value'];
-      if (row['key'] == 'apk_url') apkUrl = row['value'];
-    }
+    // 4. Compare versions
+    final requiresUpdate = _isNewerVersion(latestVersion, currentVersion);
 
-    // Siempre usar la URL de GitHub como fallback si no hay una en Supabase
-    final downloadUrl = (apkUrl != null && apkUrl.isNotEmpty) ? apkUrl : _githubApkUrl;
-
-    if (minVersionStr != null) {
-      final packageInfo = await PackageInfo.fromPlatform();
-      final currentVersionStr = packageInfo.version;
-
-      final minVersionParts = minVersionStr.split('.').map(int.tryParse).toList();
-      final currentVersionParts = currentVersionStr.split('.').map(int.tryParse).toList();
-
-      bool requiresUpdate = false;
-
-      for (int i = 0; i < minVersionParts.length; i++) {
-        final minPart = minVersionParts[i] ?? 0;
-        final currPart = (i < currentVersionParts.length) ? (currentVersionParts[i] ?? 0) : 0;
-
-        if (currPart < minPart) {
-          requiresUpdate = true;
-          break;
-        } else if (currPart > minPart) {
-          requiresUpdate = false;
+    // 5. Get download URL from release assets (fallback to direct URL)
+    String downloadUrl = _githubApkUrl;
+    final assets = res.data['assets'] as List?;
+    if (assets != null && assets.isNotEmpty) {
+      for (var asset in assets) {
+        final name = asset['name']?.toString() ?? '';
+        if (name.endsWith('.apk')) {
+          downloadUrl = asset['browser_download_url']?.toString() ?? _githubApkUrl;
           break;
         }
       }
-
-      return AppUpdateInfo(
-        isUpdateRequired: requiresUpdate,
-        updateUrl: requiresUpdate ? downloadUrl : null,
-      );
     }
 
-    return AppUpdateInfo(isUpdateRequired: false);
+    return AppUpdateInfo(
+      isUpdateRequired: requiresUpdate,
+      updateUrl: requiresUpdate ? downloadUrl : null,
+      latestVersion: latestVersion,
+    );
   } catch (e) {
     return AppUpdateInfo(isUpdateRequired: false);
   }
 });
+
+/// Returns true if [latest] is newer than [current].
+/// Compares semantic version parts (e.g. "1.0.28" > "1.0.27").
+bool _isNewerVersion(String latest, String current) {
+  final latestParts = latest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+  final currentParts = current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+
+  for (int i = 0; i < latestParts.length; i++) {
+    final l = latestParts[i];
+    final c = (i < currentParts.length) ? currentParts[i] : 0;
+
+    if (c < l) return true;
+    if (c > l) return false;
+  }
+
+  return false;
+}
