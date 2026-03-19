@@ -60,7 +60,7 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
     final prestamosData = await _supabase
         .from('prestamos')
         .select()
-        .eq('cobradorId', user.id)
+        .eq('cobrador_id', user.id)
         .eq('estado', 'activo')
         .eq('activo', true);
     
@@ -84,7 +84,7 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
     final cobrosData = await _supabase
         .from('cobros')
         .select()
-        .eq('cobradorId', user.id);
+        .eq('cobrador_id', user.id);
         
     final todosCobros = cobrosData.map((e) => CobroModel.fromJson(e)).toList();
     final cobrosHoy = todosCobros.where((c) {
@@ -128,21 +128,20 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
     try {
       // 1. Insertar el cobro
       await _supabase.from('cobros').insert({
-        'prestamoId': prestamo.id,
-        'clienteId': cliente.id,
-        'cobradorId': user.id,
+        'prestamo_id': prestamo.id,
+        'cliente_id': cliente.id,
+        'cobrador_id': user.id,
         'tipoPagoId': tipoPago.id,
         'monto': monto,
         'nombrePago': tipoPago.nombre,
         'cuotaNum': prestamo.cuotasPagadas + 1,
-        // Using current time natively
         'fecha': DateTime.now().toIso8601String(),
-        'fechaCobro': DateTime.now().toIso8601String(),
+        'fecha_cobro': DateTime.now().toIso8601String(),
       });
 
       // 2. Opcional: Actualizar el avance del préstamo
       await _supabase.from('prestamos').update({
-        'cuotasPagadas': prestamo.cuotasPagadas + (tipoPago.afectaSaldo ? 1 : 0),
+        'cuotas_pagadas': prestamo.cuotasPagadas + (tipoPago.afectaSaldo ? 1 : 0),
       }).eq('id', prestamo.id);
 
       // 3. Registrar auditoría (log)
