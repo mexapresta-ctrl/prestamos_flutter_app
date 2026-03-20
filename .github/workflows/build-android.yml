@@ -38,6 +38,8 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             android/.gradle
+            /usr/local/lib/android/sdk/cmake
+            /usr/local/lib/android/sdk/ndk
           key: ${{ runner.os }}-gradle-v4-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-v4-
