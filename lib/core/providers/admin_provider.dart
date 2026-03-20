@@ -141,6 +141,21 @@ class AdminNotifier extends AsyncNotifier<AdminDashboardData> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _fetchData());
   }
+
+  Future<void> registrarUsuario(String nombre, String usuario, String password, String rol) async {
+    try {
+      await SupabaseConfig.client.from('usuarios').insert({
+        'nombre': nombre,
+        'usuario': usuario,
+        'password': password,
+        'rol': rol,
+        'activo': true,
+      });
+      await refresh();
+    } catch (e) {
+      throw Exception('Este usuario ya existe o hubo un error al registrar: $e');
+    }
+  }
 }
 
 final adminProvider = AsyncNotifierProvider<AdminNotifier, AdminDashboardData>(() {

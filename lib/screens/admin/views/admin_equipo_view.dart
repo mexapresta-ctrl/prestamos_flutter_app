@@ -7,6 +7,7 @@ import '../../../widgets/list_card.dart';
 import '../../../widgets/role_chip.dart';
 import '../../../widgets/hero_card.dart' show Role;
 import 'admin_cobrador_detalle_view.dart';
+import 'admin_crear_miembro_sheet.dart';
 
 class AdminEquipoView extends ConsumerWidget {
   const AdminEquipoView({super.key});
@@ -75,6 +76,20 @@ class AdminEquipoView extends ConsumerWidget {
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.admin,
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (context) => const AdminCrearMiembroSheet(),
+          );
+        },
+        child: const Icon(Icons.person_add, color: Colors.white),
       ),
     );
   }
