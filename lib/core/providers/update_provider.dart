@@ -68,8 +68,10 @@ final updateProvider = FutureProvider<AppUpdateInfo>((ref) async {
 /// Returns true if [latest] is newer than [current].
 /// Compares semantic version parts (e.g. "1.0.28" > "1.0.27").
 bool _isNewerVersion(String latest, String current) {
-  final latestParts = latest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
-  final currentParts = current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+  final cleanLatest = latest.split('+').first;
+  final cleanCurrent = current.split('+').first;
+  final latestParts = cleanLatest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+  final currentParts = cleanCurrent.split('.').map((e) => int.tryParse(e) ?? 0).toList();
 
   for (int i = 0; i < latestParts.length; i++) {
     final l = latestParts[i];
