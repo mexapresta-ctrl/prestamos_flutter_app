@@ -137,10 +137,10 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
         'prestamo_id': prestamo.id,
         'cliente_id': cliente.id,
         'cobrador_id': user.id,
-        'tipo_pago_id': tipoPago.id,
+        'tipoPagoId': tipoPago.id,
         'monto': monto,
-        'nombre_pago': tipoPago.nombre,
-        'cuota_num': prestamo.cuotasPagadas + 1,
+        'nombrePago': tipoPago.nombre,
+        'cuotaNum': prestamo.cuotasPagadas + 1,
         'fecha': TimeUtil.toIsoDb(),
         'fecha_cobro': TimeUtil.toIsoDb(),
       });
