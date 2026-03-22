@@ -271,7 +271,7 @@ class _AsesorClienteWizardViewState extends ConsumerState<AsesorClienteWizardVie
             ],
           ),
           const SizedBox(height: 12),
-          CustomInput(controller: _curpCtrl, label: 'CURP Automática (Verifica si es correcta)'),
+          CustomInput(controller: _curpCtrl, label: 'CURP Automática (Calculada por Sistema)', readOnly: true),
           const SizedBox(height: 12),
           CustomInput(controller: _telefonoCtrl, label: 'Teléfono', keyboardType: TextInputType.phone, inputFormatters: [_phoneMask]),
           const SizedBox(height: 12),

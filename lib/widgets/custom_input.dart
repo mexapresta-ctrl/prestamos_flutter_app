@@ -17,6 +17,7 @@ class CustomInput extends StatefulWidget {
   final Widget? prefix;
   final String? hintText;
   final List<TextInputFormatter>? inputFormatters;
+  final bool readOnly;
 
   const CustomInput({
     super.key,
@@ -31,6 +32,7 @@ class CustomInput extends StatefulWidget {
     this.prefix,
     this.hintText,
     this.inputFormatters,
+    this.readOnly = false,
   });
 
   @override
@@ -139,6 +141,7 @@ class CustomInputState extends State<CustomInput> {
                     keyboardType: widget.keyboardType,
                     obscureText: widget.obscureText,
                     inputFormatters: widget.inputFormatters,
+                    readOnly: widget.readOnly,
                     style: TextStyle(
                       fontFamily: 'Plus Jakarta Sans',
                       fontSize: 12,
