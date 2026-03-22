@@ -7,6 +7,7 @@ import '../../core/models/cliente_model.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/custom_button.dart';
+import 'views/asesor_cliente_wizard_view.dart';
 
 class AsesorDashboard extends ConsumerStatefulWidget {
   const AsesorDashboard({super.key});
@@ -43,7 +44,10 @@ class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
         child: FloatingActionButton(
           heroTag: 'asesor_fab',
           onPressed: () {
-            setState(() => _currentIndex = 1);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AsesorClienteWizardView()),
+            );
           },
           backgroundColor: AppColors.asesor,
           elevation: 4,

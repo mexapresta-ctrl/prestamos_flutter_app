@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
@@ -15,6 +16,7 @@ class CustomInput extends StatefulWidget {
   final TextEditingController? controller;
   final Widget? prefix;
   final String? hintText;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomInput({
     super.key,
@@ -28,6 +30,7 @@ class CustomInput extends StatefulWidget {
     this.controller,
     this.prefix,
     this.hintText,
+    this.inputFormatters,
   });
 
   @override
@@ -135,6 +138,7 @@ class CustomInputState extends State<CustomInput> {
                     onChanged: widget.onChanged,
                     keyboardType: widget.keyboardType,
                     obscureText: widget.obscureText,
+                    inputFormatters: widget.inputFormatters,
                     style: TextStyle(
                       fontFamily: 'Plus Jakarta Sans',
                       fontSize: 12,
