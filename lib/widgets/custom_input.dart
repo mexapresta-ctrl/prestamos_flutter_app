@@ -18,6 +18,7 @@ class CustomInput extends StatefulWidget {
   final String? hintText;
   final List<TextInputFormatter>? inputFormatters;
   final bool readOnly;
+  final FormFieldValidator<String>? validator;
 
   const CustomInput({
     super.key,
@@ -33,6 +34,7 @@ class CustomInput extends StatefulWidget {
     this.hintText,
     this.inputFormatters,
     this.readOnly = false,
+    this.validator,
   });
 
   @override
@@ -137,6 +139,7 @@ class CustomInputState extends State<CustomInput> {
                   child: TextFormField(
                     controller: widget.controller,
                     initialValue: widget.controller == null ? widget.initialValue : null,
+                    validator: widget.validator,
                     onChanged: widget.onChanged,
                     keyboardType: widget.keyboardType,
                     obscureText: widget.obscureText,

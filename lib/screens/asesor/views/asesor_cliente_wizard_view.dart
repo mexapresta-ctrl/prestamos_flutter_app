@@ -113,12 +113,24 @@ class _AsesorClienteWizardViewState extends ConsumerState<AsesorClienteWizardVie
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Comprueba los campos requeridos del cliente'), backgroundColor: AppColors.error));
       return;
     }
+    if (_fechaNac == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selecciona la fecha de nacimiento (Requerido)'), backgroundColor: AppColors.error));
+      return;
+    }
+    if (_fotoPerfil == null || _fotoIneFrente == null || _fotoIneReverso == null || _fotoFachada == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Las 4 fotos del cliente son OBLIGATORIAS. Tómales foto.'), backgroundColor: AppColors.error));
+      return;
+    }
     setState(() { _currentStep = 1; });
   }
 
   Future<void> _finalizarGuardado() async {
     if (!_formKeyPaso2.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Comprueba los campos requeridos del aval'), backgroundColor: AppColors.error));
+      return;
+    }
+    if (_fotoAval == null || _fotoComprobanteAval == null || _avalIneFrente == null || _avalIneReverso == null || _fotoFirma == null || _fotoContrato == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Faltan 1 o más fotos del Aval o Firmas. Son 100% OBLIGATORIAS.'), backgroundColor: AppColors.error));
       return;
     }
 
@@ -233,11 +245,11 @@ class _AsesorClienteWizardViewState extends ConsumerState<AsesorClienteWizardVie
         children: [
           Text('Paso 1: Datos del Cliente', style: AppTypography.headingPrincipal),
           const SizedBox(height: 24),
-          CustomInput(controller: _nombresCtrl, label: 'Nombres', onChanged: (v) => _triggerCurpMath()),
+          CustomInput(controller: _nombresCtrl, label: 'Nombres', validator: (v) => v!.isEmpty ? 'Requerido' : null, onChanged: (v) => _triggerCurpMath()),
           const SizedBox(height: 12),
-          CustomInput(controller: _apePatCtrl, label: 'Apellido Paterno', onChanged: (v) => _triggerCurpMath()),
+          CustomInput(controller: _apePatCtrl, label: 'Apellido Paterno', validator: (v) => v!.isEmpty ? 'Requerido' : null, onChanged: (v) => _triggerCurpMath()),
           const SizedBox(height: 12),
-          CustomInput(controller: _apeMatCtrl, label: 'Apellido Materno', onChanged: (v) => _triggerCurpMath()),
+          CustomInput(controller: _apeMatCtrl, label: 'Apellido Materno', validator: (v) => v!.isEmpty ? 'Requerido' : null, onChanged: (v) => _triggerCurpMath()),
           const SizedBox(height: 12),
           ListTile(
             title: Text(_fechaNac == null ? 'Fecha de Nacimiento' : 'Nacimiento: \${_fechaNac!.day}/\${_fechaNac!.month}/\${_fechaNac!.year}'),
@@ -271,20 +283,20 @@ class _AsesorClienteWizardViewState extends ConsumerState<AsesorClienteWizardVie
             ],
           ),
           const SizedBox(height: 12),
-          CustomInput(controller: _curpCtrl, label: 'CURP Automática (Calculada por Sistema)', readOnly: true),
+          CustomInput(controller: _curpCtrl, label: 'CURP Automática (Calculada por Sistema)', readOnly: true, validator: (v) => v!.isEmpty ? 'Requerido' : null),
           const SizedBox(height: 12),
-          CustomInput(controller: _telefonoCtrl, label: 'Teléfono', keyboardType: TextInputType.phone, inputFormatters: [_phoneMask]),
+          CustomInput(controller: _telefonoCtrl, label: 'Teléfono', keyboardType: TextInputType.phone, inputFormatters: [_phoneMask], validator: (v) => v!.length < 12 ? 'Requerido (10 dígitos)' : null),
           const SizedBox(height: 12),
-          CustomInput(controller: _duiCtrl, label: 'DUI / INE'),
+          CustomInput(controller: _duiCtrl, label: 'DUI / INE', validator: (v) => v!.isEmpty ? 'Requerido' : null),
           
           const Divider(height: 48, thickness: 1, color: AppColors.border),
           Text('DIRECCIÓN DEL CLIENTE', style: AppTypography.label.copyWith(color: AppColors.asesor)),
           const SizedBox(height: 12),
-          CustomInput(controller: _calleCtrl, label: 'Calle'),
+          CustomInput(controller: _calleCtrl, label: 'Calle', validator: (v) => v!.isEmpty ? 'Requerido' : null),
           const SizedBox(height: 12),
-          CustomInput(controller: _numExtCtrl, label: 'Número Exterior / Interior'),
+          CustomInput(controller: _numExtCtrl, label: 'Número Exterior / Interior', validator: (v) => v!.isEmpty ? 'Requerido' : null),
           const SizedBox(height: 12),
-          CustomInput(controller: _coloniaCtrl, label: 'Colonia'),
+          CustomInput(controller: _coloniaCtrl, label: 'Colonia', validator: (v) => v!.isEmpty ? 'Requerido' : null),
 
           const Divider(height: 48, thickness: 1, color: AppColors.border),
           Text('EVIDENCIAS FOTOGRÁFICAS (CLIENTE)', style: AppTypography.label.copyWith(color: AppColors.asesor)),
@@ -315,20 +327,20 @@ class _AsesorClienteWizardViewState extends ConsumerState<AsesorClienteWizardVie
             ],
           ),
           const SizedBox(height: 24),
-          CustomInput(controller: _avalNombreCtrl, label: 'Nombre Completo del Aval'),
+          CustomInput(controller: _avalNombreCtrl, label: 'Nombre Completo del Aval', validator: (v) => v!.isEmpty ? 'Requerido' : null),
           const SizedBox(height: 12),
-          CustomInput(controller: _avalParentescoCtrl, label: 'Parentesco con el Cliente'),
+          CustomInput(controller: _avalParentescoCtrl, label: 'Parentesco con el Cliente', validator: (v) => v!.isEmpty ? 'Requerido' : null),
           const SizedBox(height: 12),
-          CustomInput(controller: _avalTelefonoCtrl, label: 'Teléfono del Aval', keyboardType: TextInputType.phone, inputFormatters: [_avalPhoneMask]),
+          CustomInput(controller: _avalTelefonoCtrl, label: 'Teléfono del Aval', keyboardType: TextInputType.phone, inputFormatters: [_avalPhoneMask], validator: (v) => v!.length < 12 ? 'Requerido (10 dígitos)' : null),
           
           const Divider(height: 48, thickness: 1, color: AppColors.border),
           Text('DIRECCIÓN DEL AVAL', style: AppTypography.label.copyWith(color: AppColors.asesor)),
           const SizedBox(height: 12),
-          CustomInput(controller: _avalCalleCtrl, label: 'Calle del Aval'),
+          CustomInput(controller: _avalCalleCtrl, label: 'Calle del Aval', validator: (v) => v!.isEmpty ? 'Requerido' : null),
           const SizedBox(height: 12),
-          CustomInput(controller: _avalNumExtCtrl, label: 'Número Exterior del Aval'),
+          CustomInput(controller: _avalNumExtCtrl, label: 'Número Exterior del Aval', validator: (v) => v!.isEmpty ? 'Requerido' : null),
           const SizedBox(height: 12),
-          CustomInput(controller: _avalColoniaCtrl, label: 'Colonia del Aval'),
+          CustomInput(controller: _avalColoniaCtrl, label: 'Colonia del Aval', validator: (v) => v!.isEmpty ? 'Requerido' : null),
 
           const Divider(height: 48, thickness: 1, color: AppColors.border),
           Text('EVIDENCIAS FOTOGRÁFICAS (AVAL Y CONTRATOS)', style: AppTypography.label.copyWith(color: AppColors.asesor)),
