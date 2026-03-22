@@ -94,7 +94,7 @@ class _AdminCrearMiembroSheetState extends ConsumerState<AdminCrearMiembroSheet>
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedRol,
+                initialValue: _selectedRol,
                 decoration: const InputDecoration(labelText: 'Rol', border: OutlineInputBorder()),
                 items: const [
                   DropdownMenuItem(value: 'cobrador', child: Text('Cobrador')),
