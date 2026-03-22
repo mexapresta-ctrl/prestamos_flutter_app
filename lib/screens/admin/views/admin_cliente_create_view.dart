@@ -2,12 +2,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 import '../../../widgets/custom_button.dart';
 import '../../../widgets/custom_input.dart';
 import '../../../core/config/supabase_config.dart';
 import '../../../core/providers/admin_provider.dart';
+import '../../../core/utils/curp_generator.dart';
 
 class AdminClienteCreateView extends ConsumerStatefulWidget {
   const AdminClienteCreateView({super.key});
@@ -28,8 +30,18 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
   final _duiCtrl = TextEditingController();
   final _telefonoCtrl = TextEditingController();
   
-  String? _sexo;
-  String? _estadoNacimiento;
+  String? _sexo = 'Hombre';
+  String? _estadoNacimiento = 'DF';
+  DateTime? _fechaNac;
+
+  final _phoneMask = MaskTextInputFormatter(mask: '###-###-####', filter: {"#": RegExp(r'[0-9]')});
+  final _avalPhoneMask = MaskTextInputFormatter(mask: '###-###-####', filter: {"#": RegExp(r'[0-9]')});
+
+  final List<String> _estados = [
+    'AS', 'BC', 'BS', 'CC', 'CL', 'CM', 'CS', 'CH', 'DF', 'DG', 'GT', 
+    'GR', 'HG', 'JC', 'MC', 'MN', 'MS', 'NT', 'NL', 'OC', 'PL', 'QT', 
+    'QR', 'SP', 'SL', 'SR', 'TC', 'TS', 'TL', 'VZ', 'YN', 'ZS', 'NE'
+  ];
 
   // Controladores Dirección
   final _calleCtrl = TextEditingController();
@@ -78,6 +90,22 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
     super.dispose();
   }
 
+  void _triggerCurpMath() {
+    if (_nombresCtrl.text.isNotEmpty && _apePatCtrl.text.isNotEmpty && _fechaNac != null) {
+      String generated = CurpGenerator.generate(
+        nombres: _nombresCtrl.text,
+        apellidoPaterno: _apePatCtrl.text,
+        apellidoMaterno: _apeMatCtrl.text,
+        fechaNacimiento: _fechaNac,
+        sexo: _sexo ?? 'H',
+        claveEstado: _estadoNacimiento ?? 'DF'
+      );
+      setState(() {
+        _curpCtrl.text = generated;
+      });
+    }
+  }
+
   Future<void> _pickImage(Function(File?) onPicked) async {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.camera, imageQuality: 70);
@@ -106,6 +134,18 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Por favor completa todos los campos requeridos'), backgroundColor: AppColors.error));
+      return;
+    }
+    if (_fechaNac == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('La fecha de nacimiento es OBLIGATORIA (sirve para la CURP)'), backgroundColor: AppColors.error));
+      return;
+    }
+    if (_fotoPerfil == null || _fotoIneFrente == null || _fotoIneReverso == null || _fotoFachada == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Las 4 fotos del cliente son 100% obligatorias'), backgroundColor: AppColors.error));
+      return;
+    }
+    if (_fotoAval == null || _fotoComprobanteAval == null || _avalIneFrente == null || _avalIneReverso == null || _fotoFirma == null || _fotoContrato == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Las 6 fotos del aval y contratos son 100% obligatorias'), backgroundColor: AppColors.error));
       return;
     }
 
@@ -139,7 +179,7 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
         'sexo': _sexo,
         'estado_nacimiento': _estadoNacimiento,
         'dui': _duiCtrl.text.trim(),
-        'telefono': _telefonoCtrl.text.trim(),
+        'telefono': _telefonoCtrl.text.trim().replaceAll('-', ''),
         'direccion': fullAddress,
         'calle': _calleCtrl.text.trim(),
         'numero_exterior': _numExtCtrl.text.trim(),
@@ -148,7 +188,7 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
         'activo': true,
         'aval_nombre': _avalNombreCtrl.text.trim(),
         'aval_parentesco': _avalParentescoCtrl.text.trim(),
-        'aval_telefono': _avalTelefonoCtrl.text.trim(),
+        'aval_telefono': _avalTelefonoCtrl.text.trim().replaceAll('-', ''),
         'aval_calle': _avalCalleCtrl.text.trim(),
         'aval_numero_exterior': _avalNumExtCtrl.text.trim(),
         'aval_colonia': _avalColoniaCtrl.text.trim(),
@@ -244,24 +284,49 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
                 padding: const EdgeInsets.all(20),
                 children: [
                   _buildSectionTitle('Datos Personales'),
-                  CustomInput(controller: _nombresCtrl, label: 'Nombres'),
+                  CustomInput(controller: _nombresCtrl, label: 'Nombres', validator: (v) => v!.isEmpty ? 'Requerido' : null, onChanged: (v) => _triggerCurpMath()),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _apePatCtrl, label: 'Apellido Paterno'),
+                  CustomInput(controller: _apePatCtrl, label: 'Apellido Paterno', validator: (v) => v!.isEmpty ? 'Requerido' : null, onChanged: (v) => _triggerCurpMath()),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _apeMatCtrl, label: 'Apellido Materno'),
+                  CustomInput(controller: _apeMatCtrl, label: 'Apellido Materno', validator: (v) => v!.isEmpty ? 'Requerido' : null, onChanged: (v) => _triggerCurpMath()),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: _sexo,
-                    decoration: InputDecoration(labelText: 'Sexo', filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border))),
-                    items: const [DropdownMenuItem(value: 'Hombre', child: Text('Hombre')), DropdownMenuItem(value: 'Mujer', child: Text('Mujer'))],
-                    onChanged: (val) => setState(() => _sexo = val),
+                  ListTile(
+                    title: Text(_fechaNac == null ? 'Fecha de Nacimiento' : 'Nacimiento: \${_fechaNac!.day}/\${_fechaNac!.month}/\${_fechaNac!.year}'),
+                    trailing: const Icon(Icons.calendar_today, color: AppColors.admin),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: AppColors.border)),
+                    onTap: () async {
+                      final d = await showDatePicker(context: context, initialDate: DateTime(1990), firstDate: DateTime(1930), lastDate: DateTime.now());
+                      if (d != null) { setState(() { _fechaNac = d; _triggerCurpMath(); }); }
+                    },
                   ),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _telefonoCtrl, label: 'Teléfono', keyboardType: TextInputType.phone),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _sexo,
+                          decoration: InputDecoration(labelText: 'Sexo', filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border))),
+                          items: const [DropdownMenuItem(value: 'Hombre', child: Text('Hombre')), DropdownMenuItem(value: 'Mujer', child: Text('Mujer'))],
+                          onChanged: (val) { setState(() { _sexo = val; _triggerCurpMath(); }); },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _estadoNacimiento,
+                          decoration: InputDecoration(labelText: 'Edo. Nac.', filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border))),
+                          items: _estados.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                          onChanged: (val) { setState(() { _estadoNacimiento = val; _triggerCurpMath(); }); },
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _curpCtrl, label: 'CURP'),
+                  CustomInput(controller: _telefonoCtrl, label: 'Teléfono', keyboardType: TextInputType.phone, inputFormatters: [_phoneMask], validator: (v) => v!.length < 12 ? 'Requerido (10 dígitos)' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _duiCtrl, label: 'DUI / INE'),
+                  CustomInput(controller: _curpCtrl, label: 'CURP Automática (Calculada por Sistema)', readOnly: true, validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                  const SizedBox(height: 12),
+                  CustomInput(controller: _duiCtrl, label: 'DUI / INE', validator: (v) => v!.isEmpty ? 'Requerido' : null),
 
                   _buildSectionTitle('Fotografías del Cliente'),
                   _buildPhotoField('Foto de Perfil', _fotoPerfil, (f) => _fotoPerfil = f),
@@ -269,26 +334,26 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
                   _buildPhotoField('INE Reverso', _fotoIneReverso, (f) => _fotoIneReverso = f),
 
                   _buildSectionTitle('Dirección Completa'),
-                  CustomInput(controller: _calleCtrl, label: 'Calle'),
+                  CustomInput(controller: _calleCtrl, label: 'Calle', validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _numExtCtrl, label: 'Número Exterior / Interior'),
+                  CustomInput(controller: _numExtCtrl, label: 'Número Exterior / Interior', validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _coloniaCtrl, label: 'Colonia'),
+                  CustomInput(controller: _coloniaCtrl, label: 'Colonia', validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
                   _buildPhotoField('Foto de Fachada', _fotoFachada, (f) => _fotoFachada = f),
 
                   _buildSectionTitle('Datos del Aval'),
-                  CustomInput(controller: _avalNombreCtrl, label: 'Nombre Completo del Aval'),
+                  CustomInput(controller: _avalNombreCtrl, label: 'Nombre Completo del Aval', validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _avalParentescoCtrl, label: 'Parentesco'),
+                  CustomInput(controller: _avalParentescoCtrl, label: 'Parentesco', validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _avalTelefonoCtrl, label: 'Teléfono del Aval', keyboardType: TextInputType.phone),
+                  CustomInput(controller: _avalTelefonoCtrl, label: 'Teléfono del Aval', keyboardType: TextInputType.phone, inputFormatters: [_avalPhoneMask], validator: (v) => v!.length < 12 ? 'Requerido (10 dígitos)' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _avalCalleCtrl, label: 'Calle del Aval'),
+                  CustomInput(controller: _avalCalleCtrl, label: 'Calle del Aval', validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _avalNumExtCtrl, label: 'Número del Aval'),
+                  CustomInput(controller: _avalNumExtCtrl, label: 'Número del Aval', validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _avalColoniaCtrl, label: 'Colonia del Aval'),
+                  CustomInput(controller: _avalColoniaCtrl, label: 'Colonia del Aval', validator: (v) => v!.isEmpty ? 'Requerido' : null),
 
                   _buildSectionTitle('Fotografías del Aval y Docs'),
                   _buildPhotoField('Foto del Aval', _fotoAval, (f) => _fotoAval = f),
