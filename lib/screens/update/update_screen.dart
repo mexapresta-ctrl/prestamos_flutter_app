@@ -62,16 +62,24 @@ class _UpdateScreenState extends State<UpdateScreen> {
       final List assets = data['assets'] ?? [];
 
       // Automate changelog for version 1.1.3
-      if (tagName.contains('1.1.3')) {
+      if (tagName.contains('1.1.3') || tagName.contains('1.1.4')) {
         body = '''$body
 
-✨ Novedades de la Versión 1.1.3:
-• [Mejora] El registro en la Web ahora exige todos los datos y 10 fotos.
-• [Nuevo] Autogenerador de CURP seguro e incambiable.
-• [Mejora] Formato automático en teléfonos de Cliente y Aval.
-• [Fix] El botón "Cerrar Sesión" ahora desloguea correctamente.
-• [Fix] Eliminado el campo DUI / INE.
-• [Nuevo] Agregados los campos "Oficio" y "Préstamo a Solicitar".''';
+✨ Novedades de la versión anterior:
+• El registro Web ahora exige todos los datos y fotos.
+• Autogenerador de CURP y formato en teléfonos.
+• Arreglo Global: El botón "Cerrar Sesión" ahora desloguea correctamente.
+• Eliminado campo DUI/INE y agregado Oficio y Préstamo a Solicitar.''';
+      }
+
+      // Automate changelog for version 1.1.5
+      if (tagName.contains('1.1.5')) {
+        body = '''$body
+
+✨ Novedades de la Versión 1.1.5:
+• [Mejora] Unificación total: El Asesor ahora utiliza exactamente el mismo Formulario de Registro con los nuevos campos avanzados (Ocupación, Préstamo 
+Sugerido, Fotografías y Nombres Segmentados) para mantener paridad con el Administrador web.
+• [Mejora] Ahora se procesan los campos de "Plan / Interés" y "Prestamista Asignado" siguiendo la arquitectura de la Web.''';
       }
 
       String foundUrl = '';
