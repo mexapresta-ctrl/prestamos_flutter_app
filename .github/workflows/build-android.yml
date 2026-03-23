@@ -54,6 +54,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pub-
 
+      - name: Cache Flutter intermediate build
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/
+            .dart_tool/
+          key: ${{ runner.os }}-flutter-build-${{ hashFiles('lib/**') }}-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-build-
+
       - name: Get Dependencies
         run: flutter pub get
 
