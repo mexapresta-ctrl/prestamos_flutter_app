@@ -281,11 +281,11 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
         'aval_ine_reverso_url': urlAvalIneR,
       }).select('id').single();
 
-      final int clienteId = newClienteRes['id'];
+      final clienteId = newClienteRes['id'];
       final double montoSolicitado = double.tryParse(_montoSolicitadoCtrl.text.trim().replaceAll(',', '')) ?? 0;
 
       if (montoSolicitado > 0 && _planSeleccionado != null) {
-        final planOpt = _tiposPrestamo.where((p) => p['id'] == _planSeleccionado).toList();
+        final planOpt = _tiposPrestamo.where((p) => p['id'].toString() == _planSeleccionado).toList();
         if (planOpt.isNotEmpty) {
           final p = planOpt.first;
           final double valorPago = double.tryParse(p['valor_pago'].toString()) ?? 0;
