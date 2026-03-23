@@ -370,20 +370,24 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                   _buildSectionTitle('Datos Personales'),
 
                   CustomInput(controller: _primerNombreCtrl, label: 'Primer Nombre *',
+                      textCapitalization: TextCapitalization.characters,
                       validator: (v) => v!.isEmpty ? 'Requerido' : null,
                       onChanged: (v) => _triggerCurpMath()),
                   const SizedBox(height: 12),
 
                   CustomInput(controller: _segundoNombreCtrl, label: 'Segundo Nombre (Opcional)',
+                      textCapitalization: TextCapitalization.characters,
                       onChanged: (v) => _triggerCurpMath()),
                   const SizedBox(height: 12),
 
                   CustomInput(controller: _apePatCtrl, label: 'Apellido Paterno *',
+                      textCapitalization: TextCapitalization.characters,
                       validator: (v) => v!.isEmpty ? 'Requerido' : null,
                       onChanged: (v) => _triggerCurpMath()),
                   const SizedBox(height: 12),
 
                   CustomInput(controller: _apeMatCtrl, label: 'Apellido Materno',
+                      textCapitalization: TextCapitalization.characters,
                       onChanged: (v) => _triggerCurpMath()),
                   const SizedBox(height: 12),
 

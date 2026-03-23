@@ -19,6 +19,7 @@ class CustomInput extends StatefulWidget {
   final List<TextInputFormatter>? inputFormatters;
   final bool readOnly;
   final FormFieldValidator<String>? validator;
+  final TextCapitalization textCapitalization;
 
   const CustomInput({
     super.key,
@@ -35,6 +36,7 @@ class CustomInput extends StatefulWidget {
     this.inputFormatters,
     this.readOnly = false,
     this.validator,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -145,6 +147,7 @@ class CustomInputState extends State<CustomInput> {
                     obscureText: widget.obscureText,
                     inputFormatters: widget.inputFormatters,
                     readOnly: widget.readOnly,
+                    textCapitalization: widget.textCapitalization,
                     style: TextStyle(
                       fontFamily: 'Plus Jakarta Sans',
                       fontSize: 12,
