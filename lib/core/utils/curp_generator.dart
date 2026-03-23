@@ -45,7 +45,7 @@ class CurpGenerator {
       String c3 = _firstConsonant(primerNombre.substring(1));
 
       // 00 final generico. El RENAPO asigna la homoclave real.
-      String curp = '$root$fNac$s$est$c1$c2$c3' + '00';
+      String curp = '$root$fNac$s$est$c1$c2$c3' '00';
       return curp.toUpperCase();
     } catch (e) {
       return '';
@@ -76,7 +76,7 @@ class CurpGenerator {
   static String _filterBadWords(String root) {
     const bad = ['BACA', 'BAKA', 'BUEI', 'BUEY', 'CACA', 'CACO', 'CAGA', 'CAGO', 'CAKA', 'CAKO', 'COGE', 'COGI', 'COJA', 'COJE', 'COJI', 'COJO', 'COLA', 'CULO', 'FALO', 'GETA', 'GUEI', 'GUEY', 'JETA', 'JOTO', 'KACA', 'KACO', 'KAGA', 'KAGO', 'KAKA', 'KAKO', 'KOGE', 'KOGI', 'KOJA', 'KOJE', 'KOJI', 'KOJO', 'KOLA', 'KULO', 'LILO', 'LOCA', 'LOCO', 'LOKA', 'LOKO', 'MAME', 'MAMI', 'MAMO', 'MEAR', 'MEAS', 'MEON', 'MIAR', 'MION', 'MOCO', 'MOKO', 'MULA', 'MULO', 'NACA', 'NACO', 'PEDA', 'PEDO', 'PENE', 'PIPI', 'PITO', 'POPO', 'PUTA', 'PUTO', 'QULO', 'RATA', 'ROBA', 'ROBE', 'ROBO', 'RUIN', 'SENO', 'TETA', 'VACA', 'VAGA', 'VAGO', 'VAKA', 'VUEI', 'VUEY', 'WUEI', 'WUEY'];
     if (bad.contains(root)) {
-      return root.substring(0, 1) + 'X' + root.substring(2);
+      return '${root.substring(0, 1)}X${root.substring(2)}';
     }
     return root;
   }

@@ -268,7 +268,7 @@ class _AsesorClienteWizardViewState extends ConsumerState<AsesorClienteWizardVie
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _sexo,
+                  initialValue: _sexo,
                   decoration: const InputDecoration(labelText: 'Sexo', border: OutlineInputBorder()),
                   items: const [DropdownMenuItem(value: 'Hombre', child: Text('Hombre')), DropdownMenuItem(value: 'Mujer', child: Text('Mujer'))],
                   onChanged: (val) { setState(() { _sexo = val; _triggerCurpMath(); }); },
@@ -277,7 +277,7 @@ class _AsesorClienteWizardViewState extends ConsumerState<AsesorClienteWizardVie
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _estadoNacimiento,
+                  initialValue: _estadoNacimiento,
                   decoration: const InputDecoration(labelText: 'Edo. Nac.', border: OutlineInputBorder()),
                   items: _estados.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                   onChanged: (val) { setState(() { _estadoNacimiento = val; _triggerCurpMath(); }); },

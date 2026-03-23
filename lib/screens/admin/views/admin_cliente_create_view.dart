@@ -307,7 +307,7 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _sexo,
+                          initialValue: _sexo,
                           decoration: InputDecoration(labelText: 'Sexo', filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border))),
                           items: const [DropdownMenuItem(value: 'Hombre', child: Text('Hombre')), DropdownMenuItem(value: 'Mujer', child: Text('Mujer'))],
                           onChanged: (val) { setState(() { _sexo = val; _triggerCurpMath(); }); },
@@ -316,7 +316,7 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
                       const SizedBox(width: 12),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _estadoNacimiento,
+                          initialValue: _estadoNacimiento,
                           decoration: InputDecoration(labelText: 'Edo. Nac.', filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border))),
                           items: _estados.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                           onChanged: (val) { setState(() { _estadoNacimiento = val; _triggerCurpMath(); }); },
