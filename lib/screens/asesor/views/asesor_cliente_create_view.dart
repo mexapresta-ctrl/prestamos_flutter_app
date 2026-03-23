@@ -42,7 +42,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
 
   String? _genero = 'Masculino';
   String? _estadoNacimiento = 'Ciudad de México';
-  int? _planSeleccionado;
+  String? _planSeleccionado;
 
   final _phoneMask = MaskTextInputFormatter(mask: '###-###-####', filter: {"#": RegExp(r'[0-9]')});
   final _avalPhoneMask = MaskTextInputFormatter(mask: '###-###-####', filter: {"#": RegExp(r'[0-9]')});
@@ -297,8 +297,11 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
              cuotaSemanal = totalAPagar / plazo;
           } else {
              int factorMultiplicador = 1;
-             if (frecuencia == 'Único (Día 20)') factorMultiplicador = 20;
-             else if (frecuencia == 'Único (Día 15)') factorMultiplicador = 15;
+             if (frecuencia == 'Único (Día 20)') {
+               factorMultiplicador = 20;
+             } else if (frecuencia == 'Único (Día 15)') {
+               factorMultiplicador = 15;
+             }
 
              cuotaSemanal = valorPago * factor * factorMultiplicador;
              totalAPagar = cuotaSemanal * plazo;
@@ -538,18 +541,18 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                   ),
                   const SizedBox(height: 12),
 
-                  DropdownButtonFormField<int>(
-                    value: (_planSeleccionado != null && _tiposPrestamo.any((p) => (int.tryParse(p['id'].toString()) ?? -1) == _planSeleccionado)) ? _planSeleccionado : null,
+                  DropdownButtonFormField<String>(
+                    initialValue: (_planSeleccionado != null && _tiposPrestamo.any((p) => p['id'].toString() == _planSeleccionado)) ? _planSeleccionado : null,
                     decoration: _dropDecoration('Plan / Interés *'),
                     isExpanded: true,
                     items: () {
-                      final seen = <int>{};
-                      final items = <DropdownMenuItem<int>>[];
+                      final seen = <String>{};
+                      final items = <DropdownMenuItem<String>>[];
                       for (var p in _tiposPrestamo) {
-                        final val = int.tryParse(p['id'].toString()) ?? -1;
-                        if (val != -1 && !seen.contains(val)) {
+                        final val = p['id']?.toString() ?? '';
+                        if (val.isNotEmpty && !seen.contains(val)) {
                           seen.add(val);
-                          items.add(DropdownMenuItem<int>(
+                          items.add(DropdownMenuItem<String>(
                             value: val,
                             child: Text(p['nombre']?.toString() ?? 'Plan sin nombre'),
                           ));
