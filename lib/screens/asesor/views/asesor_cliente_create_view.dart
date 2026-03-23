@@ -63,9 +63,11 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
     'VZ', 'YN', 'ZS', 'NE'
   ];
 
-  // Planes desde Supabase
-  List<Map<String, dynamic>> _planesDB = [];
-  bool _loadingPlanes = true;
+  // Planes disponibles (Modalidades por Colores)
+  final List<String> _planes = [
+    'Plan Verde - 10%', 'Plan Amarillo - 15%', 'Plan Naranja - 20%',
+    'Plan Rojo - 25%', 'Plan Negro - 30%',
+  ];
 
   // Parentescos
   final List<String> _parentescos = [
@@ -104,25 +106,6 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
   @override
   void initState() {
     super.initState();
-    _fetchPlanes();
-  }
-
-  Future<void> _fetchPlanes() async {
-    try {
-      final res = await SupabaseConfig.client
-          .from('tipos_pago')
-          .select('id, nombre, activo')
-          .eq('activo', true)
-          .order('id');
-      if (mounted) {
-        setState(() {
-          _planesDB = List<Map<String, dynamic>>.from(res);
-          _loadingPlanes = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _loadingPlanes = false);
-    }
   }
 
   @override
@@ -487,25 +470,14 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                   ),
                   const SizedBox(height: 12),
 
-                  // Plan desde Supabase
-                  _loadingPlanes
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      : DropdownButtonFormField<String>(
-                          value: _planesDB.any((p) => 
-                              '${p['nombre'] ?? ''}${p['tasa_interes'] != null ? ' - ${p['tasa_interes']}%' : ''}' == _planSeleccionado
-                            ) ? _planSeleccionado : null,
-                          decoration: _dropDecoration('Plan / Interés *'),
-                          isExpanded: true,
-                          items: _planesDB.map((p) {
-                            final display = (p['nombre'] ?? '').toString();
-                            return DropdownMenuItem<String>(value: display, child: Text(display));
-                          }).toList(),
-                          onChanged: (val) => setState(() => _planSeleccionado = val),
-                          validator: (v) => v == null ? 'Selecciona un Plan' : null,
-                        ),
+                  DropdownButtonFormField<String>(
+                    value: _planes.contains(_planSeleccionado) ? _planSeleccionado : null,
+                    decoration: _dropDecoration('Plan / Interés *'),
+                    isExpanded: true,
+                    items: _planes.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+                    onChanged: (val) => setState(() => _planSeleccionado = val),
+                    validator: (v) => v == null ? 'Selecciona un Plan' : null,
+                  ),
 
                   // ── FOTOS CLIENTE ─────────────────────────────────────────
                   _buildSectionTitle('Fotografías del Cliente'),
