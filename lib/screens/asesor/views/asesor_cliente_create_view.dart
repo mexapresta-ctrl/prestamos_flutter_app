@@ -13,6 +13,7 @@ import '../../../core/config/supabase_config.dart';
 import '../../../core/providers/asesor_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/utils/curp_generator.dart';
+import '../../../core/utils/time_util.dart';
 
 class AsesorClienteCreateView extends ConsumerStatefulWidget {
   const AsesorClienteCreateView({super.key});
@@ -200,7 +201,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
 
   Future<String?> _uploadImage(File file, String folder, String fileName) async {
     try {
-      final path = '$folder/${DateTime.now().millisecondsSinceEpoch}_$fileName';
+      final path = '$folder/${TimeUtil.now().millisecondsSinceEpoch}_$fileName';
       await SupabaseConfig.client.storage.from('clientes_archivos').upload(path, file);
       return SupabaseConfig.client.storage.from('clientes_archivos').getPublicUrl(path);
     } catch (e) {

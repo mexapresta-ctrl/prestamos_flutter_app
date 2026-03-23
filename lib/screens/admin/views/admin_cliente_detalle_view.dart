@@ -7,6 +7,7 @@ import '../../../core/models/cliente_model.dart';
 import '../../../core/providers/admin_provider.dart';
 import '../../../widgets/list_card.dart';
 import '../../../widgets/hero_card.dart' show Role;
+import '../../../core/utils/time_util.dart';
 
 class AdminClienteDetalleView extends ConsumerWidget {
   final ClienteModel cliente;
@@ -145,7 +146,7 @@ class AdminClienteDetalleView extends ConsumerWidget {
                   ...cobrosDelCliente.map((c) => ListCard(
                     role: Role.admin,
                     title: 'Abono ${formatCurrency.format(c.monto)}',
-                    subtitle: c.fechaCobro != null ? formatDate.format(DateTime.parse(c.fechaCobro!)) : 'Sin fecha',
+                    subtitle: c.fechaCobro != null ? formatDate.format(TimeUtil.parse(c.fechaCobro!)) : 'Sin fecha',
                     amount: '+${formatCurrency.format(c.monto)}',
                     badge: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

@@ -51,13 +51,15 @@ class _AdminPagosViewState extends ConsumerState<AdminPagosView> {
           } else if (_selectedFilter == 1) {
             cobros = cobros.where((c) {
               if (c.fechaCobro == null) return false;
-              final f = DateTime.tryParse(c.fechaCobro!);
+              DateTime? f;
+              try { f = TimeUtil.parse(c.fechaCobro!); } catch(_) {}
               return f != null && f.isAfter(inicioSemana.subtract(const Duration(days: 1)));
             }).toList();
           } else if (_selectedFilter == 2) {
             cobros = cobros.where((c) {
               if (c.fechaCobro == null) return false;
-              final f = DateTime.tryParse(c.fechaCobro!);
+              DateTime? f;
+              try { f = TimeUtil.parse(c.fechaCobro!); } catch(_) {}
               return f != null && f.isAfter(inicioMes.subtract(const Duration(days: 1)));
             }).toList();
           }
@@ -129,7 +131,7 @@ class _AdminPagosViewState extends ConsumerState<AdminPagosView> {
                           return ListCard(
                             role: Role.admin,
                             title: clientName,
-                            subtitle: '${c.fechaCobro != null ? formatDate.format(DateTime.parse(c.fechaCobro!)) : 'Sin fecha'}${cobradorName.isNotEmpty ? ' · $cobradorName' : ''}',
+                            subtitle: '${c.fechaCobro != null ? formatDate.format(TimeUtil.parse(c.fechaCobro!)) : 'Sin fecha'}${cobradorName.isNotEmpty ? ' · $cobradorName' : ''}',
                             amount: '+${formatCurrency.format(c.monto)}',
                             badge: const SizedBox(),
                             icon: const Icon(Icons.check_circle, color: AppColors.ok, size: 22),

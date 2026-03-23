@@ -136,7 +136,7 @@ class AdminCobradorDetalleView extends ConsumerWidget {
                     return ListCard(
                       role: Role.admin,
                       title: clientName,
-                      subtitle: c.fechaCobro != null ? formatDate.format(DateTime.parse(c.fechaCobro!)) : 'Sin fecha',
+                      subtitle: c.fechaCobro != null ? formatDate.format(TimeUtil.parse(c.fechaCobro!)) : 'Sin fecha',
                       amount: '+${formatCurrency.format(c.monto)}',
                       badge: const SizedBox(),
                       icon: const Icon(Icons.payments, color: AppColors.ok, size: 22),
