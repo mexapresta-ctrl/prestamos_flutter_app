@@ -1,7 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/supabase_config.dart';
 import '../models/user_model.dart';
+
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError();
+});
 
 class AuthState {
   final UserModel? user;
@@ -30,6 +36,16 @@ class AuthState {
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final userJson = prefs.getString('current_user');
+    if (userJson != null) {
+      try {
+        final user = UserModel.fromJson(jsonDecode(userJson));
+        return AuthState(user: user);
+      } catch (e) {
+        return AuthState();
+      }
+    }
     return AuthState();
   }
 
@@ -52,6 +68,10 @@ class AuthNotifier extends Notifier<AuthState> {
 
       if (data != null) {
         final user = UserModel.fromJson(data);
+        
+        // Guardar sesión
+        ref.read(sharedPreferencesProvider).setString('current_user', jsonEncode(data));
+
         state = state.copyWith(isLoading: false, user: user);
         
         _logAudit(user, 'LOGIN', '\${user.nombre} inició sesión en la app');
@@ -79,6 +99,7 @@ class AuthNotifier extends Notifier<AuthState> {
     if (user != null) {
       _logAudit(user, 'LOGOUT', '\${user.nombre} cerró sesión');
     }
+    ref.read(sharedPreferencesProvider).remove('current_user');
     state = AuthState(); 
   }
 

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/supabase_config.dart';
 
 import 'screens/splash/splash_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,10 +12,16 @@ void main() async {
   // Initialize Supabase
   await SupabaseConfig.initialize();
 
+  // Initialize SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+
   runApp(
     // Wrap the app with ProviderScope for Riverpod
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: const MyApp(),
     ),
   );
 }
