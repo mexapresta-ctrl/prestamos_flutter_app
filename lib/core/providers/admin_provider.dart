@@ -35,68 +35,35 @@ class AdminDashboardData {
   });
 }
 
+final _prestamosStreamProv = StreamProvider((ref) => SupabaseConfig.client.from('prestamos').stream(primaryKey: ['id']).map((list) => list.where((e) => e['activo'] == true).toList()));
+final _clientesStreamProv = StreamProvider((ref) => SupabaseConfig.client.from('clientes').stream(primaryKey: ['id']).map((list) => list.where((e) => e['activo'] == true).toList()));
+final _cobrosStreamProv = StreamProvider((ref) => SupabaseConfig.client.from('cobros').stream(primaryKey: ['id']));
+final _cobradoresStreamProv = StreamProvider((ref) => SupabaseConfig.client.from('usuarios').stream(primaryKey: ['id']).map((l) => l.where((e) => e['rol'] == 'cobrador' && e['activo'] == true).toList()));
+final _asesoresStreamProv = StreamProvider((ref) => SupabaseConfig.client.from('usuarios').stream(primaryKey: ['id']).map((l) => l.where((e) => e['rol'] == 'asesor' && e['activo'] == true).toList()));
+final _prestamistasStreamProv = StreamProvider((ref) => SupabaseConfig.client.from('usuarios').stream(primaryKey: ['id']).map((l) => l.where((e) => e['rol'] == 'prestamista' && e['activo'] == true).toList()));
+
 class AdminNotifier extends AsyncNotifier<AdminDashboardData> {
   @override
   Future<AdminDashboardData> build() async {
-    return _fetchData();
+    return _buildFromStreams();
   }
 
-  Future<AdminDashboardData> _fetchData() async {
+  Future<AdminDashboardData> _buildFromStreams() async {
     try {
-      // 1. Fetch Prestamos
-      final prestamosRes = await SupabaseConfig.client
-          .from('prestamos')
-          .select('*')
-          .eq('activo', true);
-      
-      final prestamos = (prestamosRes as List)
-          .map((e) => PrestamoModel.fromJson(e))
-          .toList();
+      // 1. Fetch Streams
+      final prestamosRes = await ref.watch(_prestamosStreamProv.future);
+      final clientesRes = await ref.watch(_clientesStreamProv.future);
+      final cobrosRes = await ref.watch(_cobrosStreamProv.future);
+      final cobradoresRes = await ref.watch(_cobradoresStreamProv.future);
+      final asesoresRes = await ref.watch(_asesoresStreamProv.future);
+      final prestamistasRes = await ref.watch(_prestamistasStreamProv.future);
 
-      // 2. Fetch Clientes
-      final clientesRes = await SupabaseConfig.client
-          .from('clientes')
-          .select('*')
-          .eq('activo', true);
-      
-      final clientes = (clientesRes as List)
-          .map((e) => ClienteModel.fromJson(e))
-          .toList();
+      final prestamos = prestamosRes.map((e) => PrestamoModel.fromJson(e)).toList();
+      final clientes = clientesRes.map((e) => ClienteModel.fromJson(e)).toList();
+      final cobros = cobrosRes.map((e) => CobroModel.fromJson(e)).toList();
 
-      // 3. Fetch Cobros
-      final cobrosRes = await SupabaseConfig.client
-          .from('cobros')
-          .select('*');
-      
-      final cobros = (cobrosRes as List)
-          .map((e) => CobroModel.fromJson(e))
-          .toList();
-
-      // 4. Fetch Cobradores (usuarios rol = cobrador)
-      final cobradoresRes = await SupabaseConfig.client
-          .from('usuarios')
-          .select('id, nombre, usuario, iniciales, rol')
-          .eq('rol', 'cobrador')
-          .eq('activo', true);
-          
       final cobradores = List<Map<String, dynamic>>.from(cobradoresRes);
-
-      // 5. Fetch Asesores (usuarios rol = asesor)
-      final asesoresRes = await SupabaseConfig.client
-          .from('usuarios')
-          .select('id, nombre, usuario, iniciales, rol')
-          .eq('rol', 'asesor')
-          .eq('activo', true);
-          
       final asesores = List<Map<String, dynamic>>.from(asesoresRes);
-
-      // 6. Fetch Prestamistas (usuarios rol = prestamista)
-      final prestamistasRes = await SupabaseConfig.client
-          .from('usuarios')
-          .select('id, nombre, usuario, iniciales, rol')
-          .eq('rol', 'prestamista')
-          .eq('activo', true);
-          
       final prestamistas = List<Map<String, dynamic>>.from(prestamistasRes);
 
       // --- CALCULATIONS ---
@@ -138,8 +105,13 @@ class AdminNotifier extends AsyncNotifier<AdminDashboardData> {
   }
 
   Future<void> refresh() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchData());
+    // Para forzar recarga (pull-to-refresh) invalidamos los providers base
+    ref.invalidate(_prestamosStreamProv);
+    ref.invalidate(_clientesStreamProv);
+    ref.invalidate(_cobrosStreamProv);
+    ref.invalidate(_cobradoresStreamProv);
+    ref.invalidate(_asesoresStreamProv);
+    ref.invalidate(_prestamistasStreamProv);
   }
 
   Future<void> registrarUsuario(String nombre, String usuario, String password, String rol) async {

@@ -24,6 +24,16 @@ class AsesorDashboardData {
   });
 }
 
+final _asesorPrestamosProv = StreamProvider((ref) {
+  final user = ref.watch(authProvider).user;
+  if (user == null || user.rol != 'asesor') return const Stream<List<Map<String, dynamic>>>.empty();
+  return SupabaseConfig.client.from('prestamos').stream(primaryKey: ['id']).map((l) => l.where((e) => e['asesor_id'] == user.id && e['activo'] == true).toList());
+});
+
+final _asesorClientesProv = StreamProvider((ref) {
+  return SupabaseConfig.client.from('clientes').stream(primaryKey: ['id']).map((l) => l.where((e) => e['activo'] == true).toList());
+});
+
 final asesorProvider = AsyncNotifierProvider<AsesorNotifier, AsesorDashboardData>(() {
   return AsesorNotifier();
 });
@@ -31,10 +41,10 @@ final asesorProvider = AsyncNotifierProvider<AsesorNotifier, AsesorDashboardData
 class AsesorNotifier extends AsyncNotifier<AsesorDashboardData> {
   @override
   Future<AsesorDashboardData> build() async {
-    return _fetchData();
+    return _buildFromStreams();
   }
 
-  Future<AsesorDashboardData> _fetchData() async {
+  Future<AsesorDashboardData> _buildFromStreams() async {
     final userState = ref.watch(authProvider);
     final user = userState.user;
 
@@ -50,26 +60,12 @@ class AsesorNotifier extends AsyncNotifier<AsesorDashboardData> {
     }
 
     try {
-      // 1. Fetch prestamos that belong to this asesor
-      final prestamosRes = await SupabaseConfig.client
-          .from('prestamos')
-          .select('*')
-          .eq('activo', true)
-          .eq('asesor_id', user.id);
-          
-      final prestamos = (prestamosRes as List)
-          .map((e) => PrestamoModel.fromJson(e))
-          .toList();
+      // 1. Fetch Streams
+      final prestamosData = await ref.watch(_asesorPrestamosProv.future);
+      final clientesData = await ref.watch(_asesorClientesProv.future);
 
-      // 2. Fetch all active clientes to display their names
-      final clientesRes = await SupabaseConfig.client
-          .from('clientes')
-          .select('*')
-          .eq('activo', true);
-          
-      final clientes = (clientesRes as List)
-          .map((e) => ClienteModel.fromJson(e))
-          .toList();
+      final prestamos = prestamosData.map((e) => PrestamoModel.fromJson(e)).toList();
+      final clientes = clientesData.map((e) => ClienteModel.fromJson(e)).toList();
 
       // 3. Calc KPIs
       double montoColocado = 0;
@@ -104,12 +100,7 @@ class AsesorNotifier extends AsyncNotifier<AsesorDashboardData> {
   }
 
   Future<void> refresh() async {
-    state = const AsyncValue.loading();
-    try {
-      final res = await _fetchData();
-      state = AsyncValue.data(res);
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
-    }
+    ref.invalidate(_asesorPrestamosProv);
+    ref.invalidate(_asesorClientesProv);
   }
 }

@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-// Removed duplicate
 import '../models/prestamo_model.dart';
 import '../models/cobro_model.dart';
 import '../models/cliente_model.dart';
 import '../models/tipo_pago_model.dart';
 import '../providers/auth_provider.dart';
 import '../utils/time_util.dart';
+import '../config/supabase_config.dart';
 
 class CobradorState {
   final List<PrestamoModel> prestamos;
@@ -39,54 +38,59 @@ class CobradorState {
   );
 }
 
+final _tiposPagoProv = StreamProvider((ref) {
+  return SupabaseConfig.client.from('tipos_pago').stream(primaryKey: ['id']).map((l) => l.where((e) => e['activo'] == true).toList());
+});
+
+final _cobradorPrestamosProv = StreamProvider((ref) {
+  final user = ref.watch(authProvider).user;
+  if (user == null) return const Stream<List<Map<String,dynamic>>>.empty();
+  return SupabaseConfig.client.from('prestamos').stream(primaryKey: ['id']).map((l) => l.where((e) => e['cobrador_id'] == user.id && e['estado'] == 'activo' && e['activo'] == true).toList());
+});
+
+final _cobradorCobrosProv = StreamProvider((ref) {
+  final user = ref.watch(authProvider).user;
+  if (user == null) return const Stream<List<Map<String,dynamic>>>.empty();
+  return SupabaseConfig.client.from('cobros').stream(primaryKey: ['id']).map((l) => l.where((e) => e['cobrador_id'] == user.id).toList());
+});
+
+final _clientesProv = StreamProvider((ref) {
+  return SupabaseConfig.client.from('clientes').stream(primaryKey: ['id']).map((l) => l.where((e) => e['activo'] == true).toList());
+});
+
 class CobradorProvider extends AsyncNotifier<CobradorState> {
-  final _supabase = Supabase.instance.client;
+  final _supabase = SupabaseConfig.client;
 
   @override
   Future<CobradorState> build() async {
-    return _fetchData();
+    return _buildFromStreams();
   }
 
-  Future<CobradorState> _fetchData() async {
-    final user = ref.read(authProvider).user;
+  Future<CobradorState> _buildFromStreams() async {
+    final user = ref.watch(authProvider).user;
     if (user == null) {
       return CobradorState.initial();
     }
 
-    // 1. Fetch Tipos Pago
-    final tiposData = await _supabase.from('tipos_pago').select().eq('activo', true);
+    // 1. Fetch Streams
+    final tiposData = await ref.watch(_tiposPagoProv.future);
+    final prestamosData = await ref.watch(_cobradorPrestamosProv.future);
+    final cobrosData = await ref.watch(_cobradorCobrosProv.future);
+    final clientesData = await ref.watch(_clientesProv.future);
+
     final tiposPago = tiposData.map((e) => TipoPagoModel.fromJson(e)).toList();
-
-    // 2. Fetch Préstamos activos asignados al cobrador
-    final prestamosData = await _supabase
-        .from('prestamos')
-        .select()
-        .eq('cobrador_id', user.id)
-        .eq('estado', 'activo')
-        .eq('activo', true)
-        .order('id');
-    
     final prestamos = prestamosData.map((e) => PrestamoModel.fromJson(e)).toList();
-
-    // 3. Obtener clientes relacionados a los préstamos
+    // 3. Filtrar clientes relacionados y listos
     List<ClienteModel> clientes = [];
     if (prestamos.isNotEmpty) {
       final clienteIds = prestamos.map((p) => p.clienteId).toSet().toList();
-      final clientesData = await _supabase.from('clientes').select().inFilter('id', clienteIds);
-      clientes = clientesData.map((e) => ClienteModel.fromJson(e)).toList();
+      clientes = clientesData.where((c) => clienteIds.contains(c['id'])).map((e) => ClienteModel.fromJson(e)).toList();
     }
 
-    // 4. Fetch Cobros de Hoy
+    // 4. Transformar y Filtrar Cobros de Hoy
     final now = TimeUtil.now();
     final hoyStr = TimeUtil.todayIsoDate(); 
 
-    // We query all cobros by this cobrador and filter in memory by today's date
-    // to mimic the web app's `c.fecha.startsWith(hoy)` logic consistently.
-    final cobrosData = await _supabase
-        .from('cobros')
-        .select()
-        .eq('cobrador_id', user.id);
-        
     final todosCobros = cobrosData.map((e) => CobroModel.fromJson(e)).toList();
     final cobrosHoy = todosCobros.where((c) {
       if (c.fechaCobro == null) return false;
@@ -117,8 +121,10 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
 
   // Refrescar manualmente
   Future<void> refresh() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchData());
+    ref.invalidate(_tiposPagoProv);
+    ref.invalidate(_cobradorPrestamosProv);
+    ref.invalidate(_cobradorCobrosProv);
+    ref.invalidate(_clientesProv);
   }
 
   // Ejecutar Cobro
@@ -159,9 +165,7 @@ class CobradorProvider extends AsyncNotifier<CobradorState> {
         'fecha': TimeUtil.toIsoDb(),
       });
 
-      // 4. Recargar el state para reflejar el progreso
-      await refresh();
-      
+      // 4. No necesitamos llamar a refresh(), el Realtime stream empujará los cambios y recalculará la UI solo.
     } catch (e) {
       throw Exception('Error al registrar cobro: $e');
     }
