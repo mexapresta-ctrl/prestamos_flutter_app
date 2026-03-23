@@ -27,8 +27,9 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
   final _apePatCtrl = TextEditingController();
   final _apeMatCtrl = TextEditingController();
   final _curpCtrl = TextEditingController();
-  final _duiCtrl = TextEditingController();
   final _telefonoCtrl = TextEditingController();
+  final _oficioCtrl = TextEditingController();
+  final _montoSolicitadoCtrl = TextEditingController();
   
   String? _sexo = 'Hombre';
   String? _estadoNacimiento = 'DF';
@@ -76,8 +77,9 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
     _apePatCtrl.dispose();
     _apeMatCtrl.dispose();
     _curpCtrl.dispose();
-    _duiCtrl.dispose();
     _telefonoCtrl.dispose();
+    _oficioCtrl.dispose();
+    _montoSolicitadoCtrl.dispose();
     _calleCtrl.dispose();
     _numExtCtrl.dispose();
     _coloniaCtrl.dispose();
@@ -178,8 +180,9 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
         'apellido_materno': _apeMatCtrl.text.trim(),
         'sexo': _sexo,
         'estado_nacimiento': _estadoNacimiento,
-        'dui': _duiCtrl.text.trim(),
         'telefono': _telefonoCtrl.text.trim().replaceAll('-', ''),
+        'oficio': _oficioCtrl.text.trim(),
+        'monto_solicitado': double.tryParse(_montoSolicitadoCtrl.text.trim().replaceAll(',', '')) ?? 0,
         'direccion': fullAddress,
         'calle': _calleCtrl.text.trim(),
         'numero_exterior': _numExtCtrl.text.trim(),
@@ -326,7 +329,9 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
                   const SizedBox(height: 12),
                   CustomInput(controller: _curpCtrl, label: 'CURP Automática (Calculada por Sistema)', readOnly: true, validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _duiCtrl, label: 'DUI / INE', validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                  CustomInput(controller: _oficioCtrl, label: 'Oficio / Ocupación', validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                  const SizedBox(height: 12),
+                  CustomInput(controller: _montoSolicitadoCtrl, label: 'Préstamo a Solicitar', keyboardType: TextInputType.number, validator: (v) => v!.isEmpty ? 'Requerido' : null),
 
                   _buildSectionTitle('Fotografías del Cliente'),
                   _buildPhotoField('Foto de Perfil', _fotoPerfil, (f) => _fotoPerfil = f),

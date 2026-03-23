@@ -29,8 +29,9 @@ class _AsesorClienteWizardViewState extends ConsumerState<AsesorClienteWizardVie
   final _apePatCtrl = TextEditingController();
   final _apeMatCtrl = TextEditingController();
   final _curpCtrl = TextEditingController();
-  final _duiCtrl = TextEditingController();
   final _telefonoCtrl = TextEditingController();
+  final _oficioCtrl = TextEditingController();
+  final _montoSolicitadoCtrl = TextEditingController();
   final _calleCtrl = TextEditingController();
   final _numExtCtrl = TextEditingController();
   final _coloniaCtrl = TextEditingController();
@@ -64,7 +65,8 @@ class _AsesorClienteWizardViewState extends ConsumerState<AsesorClienteWizardVie
   @override
   void dispose() {
     _nombresCtrl.dispose(); _apePatCtrl.dispose(); _apeMatCtrl.dispose();
-    _curpCtrl.dispose(); _duiCtrl.dispose(); _telefonoCtrl.dispose();
+    _curpCtrl.dispose(); _telefonoCtrl.dispose();
+    _oficioCtrl.dispose(); _montoSolicitadoCtrl.dispose();
     _calleCtrl.dispose(); _numExtCtrl.dispose(); _coloniaCtrl.dispose();
     _avalNombreCtrl.dispose(); _avalParentescoCtrl.dispose(); _avalTelefonoCtrl.dispose();
     _avalCalleCtrl.dispose(); _avalNumExtCtrl.dispose(); _avalColoniaCtrl.dispose();
@@ -161,8 +163,9 @@ class _AsesorClienteWizardViewState extends ConsumerState<AsesorClienteWizardVie
         'apellido_materno': _apeMatCtrl.text.trim(),
         'sexo': _sexo,
         'estado_nacimiento': _estadoNacimiento,
-        'dui': _duiCtrl.text.trim(),
         'telefono': _telefonoCtrl.text.trim().replaceAll('-', ''),
+        'oficio': _oficioCtrl.text.trim(),
+        'monto_solicitado': double.tryParse(_montoSolicitadoCtrl.text.trim().replaceAll(',', '')) ?? 0,
         'direccion': fullAddress,
         'calle': _calleCtrl.text.trim(),
         'numero_exterior': _numExtCtrl.text.trim(),
@@ -287,7 +290,9 @@ class _AsesorClienteWizardViewState extends ConsumerState<AsesorClienteWizardVie
           const SizedBox(height: 12),
           CustomInput(controller: _telefonoCtrl, label: 'Teléfono', keyboardType: TextInputType.phone, inputFormatters: [_phoneMask], validator: (v) => v!.length < 12 ? 'Requerido (10 dígitos)' : null),
           const SizedBox(height: 12),
-          CustomInput(controller: _duiCtrl, label: 'DUI / INE', validator: (v) => v!.isEmpty ? 'Requerido' : null),
+          CustomInput(controller: _oficioCtrl, label: 'Oficio / Ocupación', validator: (v) => v!.isEmpty ? 'Requerido' : null),
+          const SizedBox(height: 12),
+          CustomInput(controller: _montoSolicitadoCtrl, label: 'Préstamo a Solicitar', keyboardType: TextInputType.number, validator: (v) => v!.isEmpty ? 'Requerido' : null),
           
           const Divider(height: 48, thickness: 1, color: AppColors.border),
           Text('DIRECCIÓN DEL CLIENTE', style: AppTypography.label.copyWith(color: AppColors.asesor)),
