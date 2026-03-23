@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../theme/app_colors.dart';
+import '../auth/login_assets.dart';
 
 class UpdateScreen extends StatefulWidget {
   const UpdateScreen({super.key});
@@ -57,8 +58,21 @@ class _UpdateScreenState extends State<UpdateScreen> {
 
       final data = response.data;
       final String tagName = data['tag_name'] ?? 'v0.0.0';
-      final String body = data['body'] ?? 'Actualización sin notas.';
+      String body = data['body'] ?? 'Actualización sin notas.';
       final List assets = data['assets'] ?? [];
+
+      // Automate changelog for version 1.1.3
+      if (tagName.contains('1.1.3')) {
+        body = '''$body
+
+✨ Novedades de la Versión 1.1.3:
+• [Mejora] El registro en la Web ahora exige todos los datos y 10 fotos.
+• [Nuevo] Autogenerador de CURP seguro e incambiable.
+• [Mejora] Formato automático en teléfonos de Cliente y Aval.
+• [Fix] El botón "Cerrar Sesión" ahora desloguea correctamente.
+• [Fix] Eliminado el campo DUI / INE.
+• [Nuevo] Agregados los campos "Oficio" y "Préstamo a Solicitar".''';
+      }
 
       String foundUrl = '';
       if (assets.isNotEmpty) {
@@ -177,13 +191,16 @@ class _UpdateScreenState extends State<UpdateScreen> {
                   width: 90,
                   height: 90,
                   decoration: BoxDecoration(
-                    color: AppColors.admin,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
-                      BoxShadow(color: AppColors.admin.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10)),
+                      BoxShadow(color: AppColors.admin.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10)),
                     ],
                   ),
-                  child: const Icon(Icons.security_update, size: 40, color: Colors.white),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.memory(LoginAssets.getDecodedLogo(), fit: BoxFit.contain),
+                  ),
                 ),
               ),
               const SizedBox(height: 32),

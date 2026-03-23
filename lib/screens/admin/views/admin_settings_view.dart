@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
 import '../../../widgets/custom_button.dart';
+import '../../auth/login_screen.dart';
 import '../../../core/providers/auth_provider.dart';
 import 'admin_prestamos_view.dart';
 import 'admin_pagos_view.dart';
@@ -121,6 +122,11 @@ class AdminSettingsView extends ConsumerWidget {
                     icon: Icons.logout,
                     onPressed: () {
                        ref.read(authProvider.notifier).logout();
+                       Navigator.pushAndRemoveUntil(
+                         context,
+                         MaterialPageRoute(builder: (_) => const LoginScreen()),
+                         (route) => false,
+                       );
                     },
                   ),
                   const SizedBox(height: 100),
