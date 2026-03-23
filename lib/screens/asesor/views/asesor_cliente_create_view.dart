@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -102,6 +103,11 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
   void initState() {
     super.initState();
     _fetchPlanes();
+    _montoSolicitadoCtrl.addListener(_onMontoChanged);
+  }
+
+  void _onMontoChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _fetchPlanes() async {
@@ -123,6 +129,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
 
   @override
   void dispose() {
+    _montoSolicitadoCtrl.removeListener(_onMontoChanged);
     _primerNombreCtrl.dispose();
     _segundoNombreCtrl.dispose();
     _apePatCtrl.dispose();
@@ -403,6 +410,96 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
   );
 
+  Widget _buildPlanSummaryCard() {
+    if (_planSeleccionado == null || _montoSolicitadoCtrl.text.isEmpty) return const SizedBox.shrink();
+    
+    final planOpt = _tiposPrestamo.where((p) => p['id'].toString() == _planSeleccionado).toList();
+    if (planOpt.isEmpty) return const SizedBox.shrink();
+    
+    final p = planOpt.first;
+    final double montoSolicitado = double.tryParse(_montoSolicitadoCtrl.text.trim().replaceAll(',', '')) ?? 0;
+    if (montoSolicitado <= 0) return const SizedBox.shrink();
+
+    final double valorPago = double.tryParse(p['valor_pago'].toString()) ?? 0;
+    final int plazo = int.tryParse(p['total_pagos']?.toString() ?? '1') ?? 1;
+    final String ciclo = p['ciclo'] ?? '';
+    final String frecuencia = p['frecuencia'] ?? '';
+    final String colorStr = p['color']?.toString() ?? '#252525';
+    
+    Color planColor;
+    try {
+      planColor = Color(int.parse(colorStr.replaceAll('#', ''), radix: 16) + 0xFF000000);
+    } catch (_) {
+      planColor = AppColors.ink2;
+    }
+
+    double cuotaSemanal = 0;
+    double totalAPagar = 0;
+    final double factor = montoSolicitado / 1000;
+
+    if (ciclo == 'PORCENTAJE') {
+      final interesPorPeriodo = montoSolicitado * (valorPago / 100);
+      final interesTotal = interesPorPeriodo * plazo;
+      totalAPagar = montoSolicitado + interesTotal;
+      cuotaSemanal = totalAPagar / plazo;
+    } else {
+      int factorMultiplicador = 1;
+      if (frecuencia == 'Único (Día 20)') {
+        factorMultiplicador = 20;
+      } else if (frecuencia == 'Único (Día 15)') {
+        factorMultiplicador = 15;
+      }
+      cuotaSemanal = valorPago * factor * factorMultiplicador;
+      totalAPagar = cuotaSemanal * plazo;
+    }
+
+    final currency = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: planColor.withOpacity(0.1),
+        border: Border.all(color: planColor.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: planColor, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Resumen del Préstamo',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16).copyWith(color: planColor),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildSummaryRow('Total a Pagar:', currency.format(totalAPagar)),
+          _buildSummaryRow('Pagos Totales:', '\$plazo pagos'),
+          _buildSummaryRow('Cuota ($frecuencia):', currency.format(cuotaSemanal)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: AppColors.ink3, fontSize: 14)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -552,9 +649,21 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                         final val = p['id']?.toString() ?? '';
                         if (val.isNotEmpty && !seen.contains(val)) {
                           seen.add(val);
+                          final cStr = p['color']?.toString() ?? '#252525';
+                          Color pColor = AppColors.ink2;
+                          try { pColor = Color(int.parse(cStr.replaceAll('#',''), radix: 16) + 0xFF000000); } catch (_) {}
                           items.add(DropdownMenuItem<String>(
                             value: val,
-                            child: Text(p['nombre']?.toString() ?? 'Plan sin nombre'),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 14, height: 14,
+                                  decoration: BoxDecoration(color: pColor, shape: BoxShape.circle),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(p['nombre']?.toString() ?? 'Plan sin nombre'),
+                              ],
+                            ),
                           ));
                         }
                       }
@@ -563,6 +672,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                     onChanged: (val) => setState(() => _planSeleccionado = val),
                     validator: (v) => v == null ? 'Selecciona un Plan' : null,
                   ),
+                  _buildPlanSummaryCard(),
 
                   // ── FOTOS CLIENTE ─────────────────────────────────────────
                   _buildSectionTitle('Fotografías del Cliente'),
