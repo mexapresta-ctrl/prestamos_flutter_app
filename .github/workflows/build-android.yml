@@ -36,6 +36,7 @@ jobs:
         with:
           path: |
             ~/.gradle/caches
+            ~/.gradle/caches/build-cache-*
             ~/.gradle/wrapper
             android/.gradle
             /usr/local/lib/android/sdk/cmake
