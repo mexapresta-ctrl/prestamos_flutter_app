@@ -23,9 +23,9 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
-  // Controladores - Datos Personales
+  // Datos Personales
   final _primerNombreCtrl = TextEditingController();
-  final _segundoNombreCtrl = TextEditingController(); // Opcional
+  final _segundoNombreCtrl = TextEditingController();
   final _apePatCtrl = TextEditingController();
   final _apeMatCtrl = TextEditingController();
   final _curpCtrl = TextEditingController();
@@ -33,15 +33,15 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
   final _oficioCtrl = TextEditingController();
   final _montoSolicitadoCtrl = TextEditingController();
 
-  // Fecha de Nacimiento manual dividida en 3 campos
+  // Fecha de Nacimiento manual
   final _diaCtrl = TextEditingController();
   final _mesCtrl = TextEditingController();
   final _anioCtrl = TextEditingController();
+  DateTime? _fechaNac;
 
   String? _genero = 'Masculino';
   String? _estadoNacimiento = 'Ciudad de México';
   String? _planSeleccionado;
-  DateTime? _fechaNac;
 
   final _phoneMask = MaskTextInputFormatter(mask: '###-###-####', filter: {"#": RegExp(r'[0-9]')});
   final _avalPhoneMask = MaskTextInputFormatter(mask: '###-###-####', filter: {"#": RegExp(r'[0-9]')});
@@ -56,8 +56,6 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
     'Sinaloa', 'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala',
     'Veracruz', 'Yucatán', 'Zacatecas', 'Nacido en el Extranjero'
   ];
-
-  // Claves CURP correspondientes a cada estado (mismo orden)
   final List<String> _estadosCurp = [
     'AS', 'BC', 'BS', 'CC', 'CL', 'CM', 'CS', 'CH', 'DF',
     'DG', 'GT', 'GR', 'HG', 'JC', 'MC', 'MN', 'MS', 'NT', 'NL',
@@ -65,28 +63,26 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
     'VZ', 'YN', 'ZS', 'NE'
   ];
 
-  // Planes disponibles
-  final List<String> _planes = [
-    'Plan Verde - 10%', 'Plan Amarillo - 15%', 'Plan Naranja - 20%',
-    'Plan Rojo - 25%', 'Plan Negro - 30%',
-  ];
+  // Planes desde Supabase
+  List<Map<String, dynamic>> _planesDB = [];
+  bool _loadingPlanes = true;
 
-  // Parentescos disponibles
+  // Parentescos
   final List<String> _parentescos = [
     'Padre', 'Madre', 'Hijo/a', 'Hermano/a', 'Cónyuge / Pareja',
     'Tío/a', 'Primo/a', 'Abuelo/a', 'Amigo/a', 'Vecino/a', 'Otro',
   ];
   String? _avalParentesco;
 
-  // Controladores Dirección Cliente
+  // Dirección Cliente
   final _calleCtrl = TextEditingController();
   final _numExtCtrl = TextEditingController();
   final _coloniaCtrl = TextEditingController();
 
-  // Controladores Aval
-  final _avalNombreCtrl = TextEditingController();   // Nombre(s)
-  final _avalApePatCtrl = TextEditingController();   // Apellido Paterno
-  final _avalApeMatCtrl = TextEditingController();   // Apellido Materno
+  // Aval
+  final _avalNombreCtrl = TextEditingController();
+  final _avalApePatCtrl = TextEditingController();
+  final _avalApeMatCtrl = TextEditingController();
   final _avalTelefonoCtrl = TextEditingController();
   final _avalCalleCtrl = TextEditingController();
   final _avalNumExtCtrl = TextEditingController();
@@ -104,6 +100,29 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
   File? _avalIneReverso;
 
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPlanes();
+  }
+
+  Future<void> _fetchPlanes() async {
+    try {
+      final res = await SupabaseConfig.client
+          .from('planes')
+          .select('id, nombre, tasa_interes, color')
+          .order('tasa_interes');
+      if (mounted) {
+        setState(() {
+          _planesDB = List<Map<String, dynamic>>.from(res);
+          _loadingPlanes = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingPlanes = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -142,8 +161,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
     final anio = int.tryParse(_anioCtrl.text.trim());
     if (dia != null && mes != null && anio != null && anio > 1900) {
       try {
-        final d = DateTime(anio, mes, dia);
-        setState(() { _fechaNac = d; });
+        setState(() { _fechaNac = DateTime(anio, mes, dia); });
         _triggerCurpMath();
       } catch (_) {}
     }
@@ -152,12 +170,14 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
   void _triggerCurpMath() {
     if (_primerNombreCtrl.text.isNotEmpty && _apePatCtrl.text.isNotEmpty && _fechaNac != null) {
       final nombres = '${_primerNombreCtrl.text.trim()} ${_segundoNombreCtrl.text.trim()}'.trim();
-      String generated = CurpGenerator.generate(
+      // H = Hombre/Masculino, M = Mujer/Femenino
+      final sexoCurp = (_genero == 'Masculino') ? 'H' : 'M';
+      final generated = CurpGenerator.generate(
         nombres: nombres,
         apellidoPaterno: _apePatCtrl.text,
         apellidoMaterno: _apeMatCtrl.text,
         fechaNacimiento: _fechaNac,
-        sexo: _genero == 'Masculino' ? 'H' : 'M',
+        sexo: sexoCurp,
         claveEstado: _getClaveCurp(),
       );
       setState(() { _curpCtrl.text = generated; });
@@ -167,7 +187,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
   Future<void> _pickImage(Function(File?) onPicked) async {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.camera, imageQuality: 70);
-      if (image != null) { setState(() { onPicked(File(image.path)); }); }
+      if (image != null) setState(() { onPicked(File(image.path)); });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al abrir cámara: $e')));
@@ -180,14 +200,14 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
       await SupabaseConfig.client.storage.from('clientes_archivos').upload(path, file);
       return SupabaseConfig.client.storage.from('clientes_archivos').getPublicUrl(path);
     } catch (e) {
-      debugPrint('Error subiendo imagen $fileName: $e');
+      debugPrint('Error subiendo $fileName: $e');
       return null;
     }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Por favor completa todos los campos requeridos'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Completa todos los campos requeridos'), backgroundColor: AppColors.error));
       return;
     }
     if (_fechaNac == null) {
@@ -195,11 +215,11 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
       return;
     }
     if (_fotoPerfil == null || _fotoIneFrente == null || _fotoIneReverso == null || _fotoFirmaCliente == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Las fotos del cliente (Perfil, INE Frente, INE Reverso y Firma) son obligatorias'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fotos del cliente (Perfil, INE Frente, INE Reverso y Firma) son obligatorias'), backgroundColor: AppColors.error));
       return;
     }
     if (_avalFirma == null || _avalIneFrente == null || _avalIneReverso == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Las fotos del Aval (Firma, INE Frente e INE Reverso) son obligatorias'), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fotos del Aval (Firma, INE Frente e INE Reverso) son obligatorias'), backgroundColor: AppColors.error));
       return;
     }
 
@@ -220,7 +240,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
 
       final nombres = '${_primerNombreCtrl.text.trim()} ${_segundoNombreCtrl.text.trim()}'.trim();
       final fullName = '$nombres ${_apePatCtrl.text.trim()} ${_apeMatCtrl.text.trim()}'.trim();
-      final avalNombreCompleto = '${_avalNombreCtrl.text.trim()} ${_avalApePatCtrl.text.trim()} ${_avalApeMatCtrl.text.trim()}'.trim();
+      final avalNombre = '${_avalNombreCtrl.text.trim()} ${_avalApePatCtrl.text.trim()} ${_avalApeMatCtrl.text.trim()}'.trim();
       final fullAddress = '${_calleCtrl.text.trim()} ${_numExtCtrl.text.trim()}, ${_coloniaCtrl.text.trim()}'.trim();
 
       await SupabaseConfig.client.from('clientes').insert({
@@ -239,7 +259,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
         'colonia': _coloniaCtrl.text.trim(),
         'curp': _curpCtrl.text.trim(),
         'activo': true,
-        'aval_nombre': avalNombreCompleto,
+        'aval_nombre': avalNombre,
         'aval_parentesco': _avalParentesco,
         'aval_telefono': _avalTelefonoCtrl.text.trim().replaceAll('-', ''),
         'aval_calle': _avalCalleCtrl.text.trim(),
@@ -251,9 +271,9 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
         'foto_fachada_url': urlFachada,
         'foto_firma_url': urlFirmaCliente,
         'foto_contrato_url': urlContrato,
+        'foto_aval_url': urlAvalFirma,
         'aval_ine_frente_url': urlAvalIneF,
         'aval_ine_reverso_url': urlAvalIneR,
-        'foto_aval_url': urlAvalFirma,
       });
 
       if (!mounted) return;
@@ -297,12 +317,14 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                   Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.ink)),
                   if (required) const Text(' *', style: TextStyle(color: AppColors.error, fontSize: 12)),
                 ]),
-                Text(currentFile != null ? 'Capturada ✓' : 'Tocar para tomar foto', style: TextStyle(fontSize: 10, color: currentFile != null ? AppColors.ok : AppColors.ink4)),
+                Text(currentFile != null ? 'Capturada ✓' : 'Tocar para tomar foto',
+                    style: TextStyle(fontSize: 10, color: currentFile != null ? AppColors.ok : AppColors.ink4)),
               ],
             ),
           ),
           IconButton(
-            icon: Icon(currentFile != null ? Icons.check_circle : Icons.add_circle, color: currentFile != null ? AppColors.ok : AppColors.asesor),
+            icon: Icon(currentFile != null ? Icons.check_circle : Icons.add_circle,
+                color: currentFile != null ? AppColors.ok : AppColors.asesor),
             onPressed: () => _pickImage(onPicked),
           ),
         ],
@@ -313,7 +335,8 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(top: 24, bottom: 12),
-      child: Text(title.toUpperCase(), style: AppTypography.label.copyWith(fontSize: 11, color: AppColors.asesor, letterSpacing: 1.5)),
+      child: Text(title.toUpperCase(),
+          style: AppTypography.label.copyWith(fontSize: 11, color: AppColors.asesor, letterSpacing: 1.5)),
     );
   }
 
@@ -343,95 +366,81 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  // ─── DATOS PERSONALES ─────────────────────────────────────
+                  // ── DATOS PERSONALES ──────────────────────────────────────
                   _buildSectionTitle('Datos Personales'),
 
-                  // Primer Nombre (Obligatorio)
-                  CustomInput(
-                    controller: _primerNombreCtrl,
-                    label: 'Primer Nombre *',
-                    validator: (v) => v!.isEmpty ? 'Requerido' : null,
-                    onChanged: (v) => _triggerCurpMath(),
-                  ),
+                  CustomInput(controller: _primerNombreCtrl, label: 'Primer Nombre *',
+                      validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                      onChanged: (v) => _triggerCurpMath()),
                   const SizedBox(height: 12),
 
-                  // Segundo Nombre (Opcional)
-                  CustomInput(
-                    controller: _segundoNombreCtrl,
-                    label: 'Segundo Nombre (Opcional)',
-                    onChanged: (v) => _triggerCurpMath(),
-                  ),
+                  CustomInput(controller: _segundoNombreCtrl, label: 'Segundo Nombre (Opcional)',
+                      onChanged: (v) => _triggerCurpMath()),
                   const SizedBox(height: 12),
 
-                  // Apellidos
-                  CustomInput(controller: _apePatCtrl, label: 'Apellido Paterno *', validator: (v) => v!.isEmpty ? 'Requerido' : null, onChanged: (v) => _triggerCurpMath()),
-                  const SizedBox(height: 12),
-                  CustomInput(controller: _apeMatCtrl, label: 'Apellido Materno', onChanged: (v) => _triggerCurpMath()),
+                  CustomInput(controller: _apePatCtrl, label: 'Apellido Paterno *',
+                      validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                      onChanged: (v) => _triggerCurpMath()),
                   const SizedBox(height: 12),
 
-                  // Fecha de Nacimiento manual (DD / MM / AAAA)
-                  const Text('Fecha de Nacimiento *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                  CustomInput(controller: _apeMatCtrl, label: 'Apellido Materno',
+                      onChanged: (v) => _triggerCurpMath()),
+                  const SizedBox(height: 12),
+
+                  // Fecha de Nacimiento DD / MM / AAAA
+                  const Text('Fecha de Nacimiento *',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.ink)),
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      SizedBox(
-                        width: 70,
-                        child: TextFormField(
-                          controller: _diaCtrl,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
-                          decoration: _dropDecoration('DD'),
-                          onChanged: (v) { if (v.length == 2) { FocusScope.of(context).nextFocus(); _tryBuildDate(); } },
-                          validator: (v) => v!.isEmpty ? 'DD' : null,
-                        ),
-                      ),
-                      const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('/', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
-                      SizedBox(
-                        width: 70,
-                        child: TextFormField(
-                          controller: _mesCtrl,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
-                          decoration: _dropDecoration('MM'),
-                          onChanged: (v) { if (v.length == 2) { FocusScope.of(context).nextFocus(); _tryBuildDate(); } },
-                          validator: (v) => v!.isEmpty ? 'MM' : null,
-                        ),
-                      ),
-                      const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('/', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _anioCtrl,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(4)],
-                          decoration: _dropDecoration('AAAA'),
-                          onChanged: (v) { if (v.length == 4) _tryBuildDate(); },
-                          validator: (v) => v!.length < 4 ? 'AAAA' : null,
-                        ),
-                      ),
+                      SizedBox(width: 70, child: TextFormField(
+                        controller: _diaCtrl,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
+                        decoration: _dropDecoration('DD'),
+                        onChanged: (v) { if (v.length == 2) { FocusScope.of(context).nextFocus(); _tryBuildDate(); } },
+                        validator: (v) => v!.isEmpty ? 'DD' : null,
+                      )),
+                      const Padding(padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Text('/', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+                      SizedBox(width: 70, child: TextFormField(
+                        controller: _mesCtrl,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
+                        decoration: _dropDecoration('MM'),
+                        onChanged: (v) { if (v.length == 2) { FocusScope.of(context).nextFocus(); _tryBuildDate(); } },
+                        validator: (v) => v!.isEmpty ? 'MM' : null,
+                      )),
+                      const Padding(padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Text('/', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+                      Expanded(child: TextFormField(
+                        controller: _anioCtrl,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(4)],
+                        decoration: _dropDecoration('AAAA'),
+                        onChanged: (v) { if (v.length == 4) _tryBuildDate(); },
+                        validator: (v) => v!.length < 4 ? 'AAAA' : null,
+                      )),
                     ],
                   ),
                   const SizedBox(height: 12),
 
-                  // Género y Estado de Nacimiento
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _genero,
-                          decoration: _dropDecoration('Género *'),
-                          items: const [
-                            DropdownMenuItem(value: 'Masculino', child: Text('Masculino')),
-                            DropdownMenuItem(value: 'Femenino', child: Text('Femenino')),
-                          ],
-                          onChanged: (val) { setState(() { _genero = val; _triggerCurpMath(); }); },
-                          validator: (v) => v == null ? 'Requerido' : null,
-                        ),
-                      ),
+                  // Género
+                  DropdownButtonFormField<String>(
+                    value: _genero,
+                    decoration: _dropDecoration('Género *'),
+                    items: const [
+                      DropdownMenuItem(value: 'Masculino', child: Text('Masculino')),
+                      DropdownMenuItem(value: 'Femenino', child: Text('Femenino')),
                     ],
+                    onChanged: (val) { setState(() { _genero = val; _triggerCurpMath(); }); },
+                    validator: (v) => v == null ? 'Requerido' : null,
                   ),
                   const SizedBox(height: 12),
+
+                  // Estado de Nacimiento
                   DropdownButtonFormField<String>(
-                    initialValue: _estadoNacimiento,
+                    value: _estadoNacimiento,
                     decoration: _dropDecoration('Estado de Nacimiento *'),
                     isExpanded: true,
                     items: _estados.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
@@ -439,21 +448,31 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                     validator: (v) => v == null ? 'Requerido' : null,
                   ),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _curpCtrl, label: 'CURP (Calculada automáticamente)', readOnly: true, validator: (v) => v!.isEmpty ? 'Requerido' : null),
+
+                  CustomInput(controller: _curpCtrl, label: 'CURP (Calculada automáticamente)', readOnly: true,
+                      validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _telefonoCtrl, label: 'Teléfono *', keyboardType: TextInputType.phone, inputFormatters: [_phoneMask], validator: (v) => v!.length < 12 ? 'Requerido (10 dígitos)' : null),
+
+                  CustomInput(controller: _telefonoCtrl, label: 'Teléfono *',
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [_phoneMask],
+                      validator: (v) => v!.length < 12 ? 'Requerido (10 dígitos)' : null),
                   const SizedBox(height: 12),
+
                   CustomInput(controller: _oficioCtrl, label: 'Oficio / Ocupación'),
 
-                  // ─── DIRECCIÓN (antes del Préstamo) ───────────────────────
+                  // ── DIRECCIÓN ─────────────────────────────────────────────
                   _buildSectionTitle('Dirección Completa'),
-                  CustomInput(controller: _calleCtrl, label: 'Calle *', validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                  CustomInput(controller: _calleCtrl, label: 'Calle *',
+                      validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _numExtCtrl, label: 'Núm. Exterior / Interior *', validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                  CustomInput(controller: _numExtCtrl, label: 'Núm. Exterior / Interior *',
+                      validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _coloniaCtrl, label: 'Colonia *', validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                  CustomInput(controller: _coloniaCtrl, label: 'Colonia *',
+                      validator: (v) => v!.isEmpty ? 'Requerido' : null),
 
-                  // ─── PRÉSTAMO Y PLAN ──────────────────────────────────────
+                  // ── PRÉSTAMO Y PLAN ───────────────────────────────────────
                   _buildSectionTitle('Datos del Préstamo Sugerido'),
                   CustomInput(
                     controller: _montoSolicitadoCtrl,
@@ -462,16 +481,28 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                     validator: (v) => v!.isEmpty ? 'Requerido' : null,
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: _planSeleccionado,
-                    decoration: _dropDecoration('Plan / Interés *'),
-                    isExpanded: true,
-                    items: _planes.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
-                    onChanged: (val) => setState(() => _planSeleccionado = val),
-                    validator: (v) => v == null ? 'Selecciona un Plan' : null,
-                  ),
 
-                  // ─── FOTOGRAFÍAS DEL CLIENTE ──────────────────────────────
+                  // Plan desde Supabase
+                  _loadingPlanes
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : DropdownButtonFormField<String>(
+                          value: _planSeleccionado,
+                          decoration: _dropDecoration('Plan / Interés *'),
+                          isExpanded: true,
+                          items: _planesDB.map((p) {
+                            final nombre = p['nombre'] ?? '';
+                            final tasa = p['tasa_interes'] != null ? ' - ${p['tasa_interes']}%' : '';
+                            final display = '$nombre$tasa';
+                            return DropdownMenuItem<String>(value: display, child: Text(display));
+                          }).toList(),
+                          onChanged: (val) => setState(() => _planSeleccionado = val),
+                          validator: (v) => v == null ? 'Selecciona un Plan' : null,
+                        ),
+
+                  // ── FOTOS CLIENTE ─────────────────────────────────────────
                   _buildSectionTitle('Fotografías del Cliente'),
                   _buildPhotoField('Foto de Perfil / Rostro', _fotoPerfil, (f) => _fotoPerfil = f),
                   _buildPhotoField('INE Frontal', _fotoIneFrente, (f) => _fotoIneFrente = f),
@@ -480,16 +511,19 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                   _buildPhotoField('Firma del Cliente / Titular *', _fotoFirmaCliente, (f) => _fotoFirmaCliente = f),
                   _buildPhotoField('Foto del Contrato Firmado', _fotoContrato, (f) => _fotoContrato = f, required: false),
 
-                  // ─── DATOS DEL AVAL ───────────────────────────────────────
+                  // ── DATOS DEL AVAL ────────────────────────────────────────
                   _buildSectionTitle('Datos del Aval'),
-                  CustomInput(controller: _avalNombreCtrl, label: 'Nombre(s) del Aval *', validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                  CustomInput(controller: _avalNombreCtrl, label: 'Nombre(s) del Aval *',
+                      validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _avalApePatCtrl, label: 'Apellido Paterno del Aval *', validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                  CustomInput(controller: _avalApePatCtrl, label: 'Apellido Paterno del Aval *',
+                      validator: (v) => v!.isEmpty ? 'Requerido' : null),
                   const SizedBox(height: 12),
                   CustomInput(controller: _avalApeMatCtrl, label: 'Apellido Materno del Aval'),
                   const SizedBox(height: 12),
+
                   DropdownButtonFormField<String>(
-                    initialValue: _avalParentesco,
+                    value: _avalParentesco,
                     decoration: _dropDecoration('Parentesco con el Cliente *'),
                     isExpanded: true,
                     items: _parentescos.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
@@ -497,15 +531,22 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                     validator: (v) => v == null ? 'Selecciona un Parentesco' : null,
                   ),
                   const SizedBox(height: 12),
-                  CustomInput(controller: _avalTelefonoCtrl, label: 'Teléfono del Aval *', keyboardType: TextInputType.phone, inputFormatters: [_avalPhoneMask], validator: (v) => v!.length < 12 ? 'Requerido (10 dígitos)' : null),
-                  const SizedBox(height: 12),
-                  CustomInput(controller: _avalCalleCtrl, label: 'Calle del Aval *', validator: (v) => v!.isEmpty ? 'Requerido' : null),
-                  const SizedBox(height: 12),
-                  CustomInput(controller: _avalNumExtCtrl, label: 'Núm. Exterior del Aval *', validator: (v) => v!.isEmpty ? 'Requerido' : null),
-                  const SizedBox(height: 12),
-                  CustomInput(controller: _avalColoniaCtrl, label: 'Colonia del Aval *', validator: (v) => v!.isEmpty ? 'Requerido' : null),
 
-                  // ─── FOTOGRAFÍAS DEL AVAL ─────────────────────────────────
+                  CustomInput(controller: _avalTelefonoCtrl, label: 'Teléfono del Aval *',
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [_avalPhoneMask],
+                      validator: (v) => v!.length < 12 ? 'Requerido (10 dígitos)' : null),
+                  const SizedBox(height: 12),
+                  CustomInput(controller: _avalCalleCtrl, label: 'Calle del Aval *',
+                      validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                  const SizedBox(height: 12),
+                  CustomInput(controller: _avalNumExtCtrl, label: 'Núm. Exterior del Aval *',
+                      validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                  const SizedBox(height: 12),
+                  CustomInput(controller: _avalColoniaCtrl, label: 'Colonia del Aval *',
+                      validator: (v) => v!.isEmpty ? 'Requerido' : null),
+
+                  // ── FOTOS AVAL ────────────────────────────────────────────
                   _buildSectionTitle('Fotografías del Aval'),
                   _buildPhotoField('Firma del Aval *', _avalFirma, (f) => _avalFirma = f),
                   _buildPhotoField('INE Frontal del Aval *', _avalIneFrente, (f) => _avalIneFrente = f),
