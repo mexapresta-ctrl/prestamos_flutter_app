@@ -54,6 +54,16 @@ jobs:
       - name: Get Dependencies
         run: flutter pub get
 
+      - name: Cache Gradle Build Cache (APK Optimization)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches/build-cache-*
+            android/.gradle
+          key: ${{ runner.os }}-gradle-build-cache-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-build-cache-
+
       - name: Build Signed Release APK
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
