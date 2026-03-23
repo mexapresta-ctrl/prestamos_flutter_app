@@ -10,6 +10,7 @@ import '../../../widgets/custom_input.dart';
 import '../../../core/config/supabase_config.dart';
 import '../../../core/providers/admin_provider.dart';
 import '../../../core/utils/curp_generator.dart';
+import '../../../core/utils/time_util.dart';
 
 class AdminClienteCreateView extends ConsumerStatefulWidget {
   const AdminClienteCreateView({super.key});
@@ -298,7 +299,7 @@ class _AdminClienteCreateViewState extends ConsumerState<AdminClienteCreateView>
                     trailing: const Icon(Icons.calendar_today, color: AppColors.admin),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: AppColors.border)),
                     onTap: () async {
-                      final d = await showDatePicker(context: context, initialDate: DateTime(1990), firstDate: DateTime(1930), lastDate: DateTime.now());
+                      final d = await showDatePicker(context: context, initialDate: DateTime(1990), firstDate: DateTime(1930), lastDate: TimeUtil.now());
                       if (d != null) { setState(() { _fechaNac = d; _triggerCurpMath(); }); }
                     },
                   ),

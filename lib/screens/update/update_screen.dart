@@ -1,13 +1,14 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_colors.dart';
 import '../auth/login_assets.dart';
+import 'package:flutter/services.dart';
 class UpdateScreen extends StatefulWidget {
   const UpdateScreen({super.key});
 
@@ -16,6 +17,7 @@ class UpdateScreen extends StatefulWidget {
 }
 
 class _UpdateScreenState extends State<UpdateScreen> {
+  static const _channel = MethodChannel('com.mexapresta.app/downloader');
   String _currentVersion = 'v...';
   String _latestVersion = 'Cargando...';
   String _releaseNotes = 'Buscando novedades...';
@@ -109,58 +111,27 @@ Sugerido, Fotografías y Nombres Segmentados) para mantener paridad con el Admin
   Future<void> _startDownload() async {
     if (_apkUrl.isEmpty) return;
 
-    _downloadState.value = {'received': 0, 'total': 0, 'progress': 0.0};
     setState(() {
       _isDownloading = true;
       _isDone = false;
     });
 
     try {
-      final dir = await getExternalStorageDirectory();
-      if (dir == null) throw Exception("No storage directory");
-      
-      final savePath = '${dir.path}/app-release.apk';
-      final file = File(savePath);
-      if (await file.exists()) {
-        await file.delete();
-      }
-
-      final dio = Dio(BaseOptions(
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-          'Accept': 'application/octet-stream',
-        },
-      ));
-      
-      await dio.download(
-        _apkUrl,
-        savePath,
-        onReceiveProgress: (received, total) {
-          if (!mounted) return;
-          final now = DateTime.now();
-          if (now.difference(lastUpdate).inMilliseconds > 100 || received == total) {
-            lastUpdate = now;
-            _downloadState.value = {
-              'received': received,
-              'total': total,
-              'progress': total > 0 ? (received / total) : 0.0,
-            };
-          }
-        },
-      );
+      final result = await _channel.invokeMethod('startDownload', {
+        'url': _apkUrl,
+        'fileName': 'MexaPresta-update.apk',
+      });
 
       if (mounted) {
         setState(() {
-          _localPath = savePath;
+          _localPath = result?.toString();
           _isDownloading = false;
           _isDone = true;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isDownloading = false;
-        });
+        setState(() => _isDownloading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
@@ -170,7 +141,12 @@ Sugerido, Fotografías y Nombres Segmentados) para mantener paridad con el Admin
 
   Future<void> _installApk() async {
     if (_localPath != null) {
-      await OpenFilex.open(_localPath!);
+      try {
+        await _channel.invokeMethod('installApk', {'path': _localPath});
+      } catch (_) {
+        // Fallback to open_filex
+        await OpenFilex.open(_localPath!);
+      }
     }
   }
 
@@ -258,36 +234,30 @@ Sugerido, Fotografías y Nombres Segmentados) para mantener paridad con el Admin
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                  child: ValueListenableBuilder<Map<String, dynamic>>(
-                    valueListenable: _downloadState,
-                    builder: (context, state, child) {
-                      final received = state['received'] as int;
-                      final total = state['total'] as int;
-                      final double progress = state['progress'] as double;
-                      final bool isKnown = total > 0;
-
-                      return Column(
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Descargando...', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.black87)),
-                              Text(isKnown ? '${(progress * 100).toInt()}%' : _formatBytes(received), style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppColors.admin)),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: LinearProgressIndicator(
-                              value: isKnown ? progress : null,
-                              minHeight: 8,
-                              backgroundColor: Colors.grey[200],
-                              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.admin),
-                            ),
-                          ),
+                          Text('Descargando en segundo plano...', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.black87)),
                         ],
-                      );
-                    },
+                      ),
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: const LinearProgressIndicator(
+                          minHeight: 8,
+                          backgroundColor: Color(0xFFE5E7EB),
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.admin),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Puedes salir de la app. La descarga continuará en la barra de notificaciones.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ],
                   ),
                 ),
 
