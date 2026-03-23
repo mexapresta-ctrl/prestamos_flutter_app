@@ -481,7 +481,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
           ),
           const SizedBox(height: 12),
           _buildSummaryRow('Total a Pagar:', currency.format(totalAPagar)),
-          _buildSummaryRow('Pagos Totales:', '\$plazo pagos'),
+          _buildSummaryRow('Pagos Totales:', '$plazo pagos'),
           _buildSummaryRow('Cuota ($frecuencia):', currency.format(cuotaSemanal)),
         ],
       ),
