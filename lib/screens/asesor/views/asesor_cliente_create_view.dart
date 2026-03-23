@@ -539,13 +539,24 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                   const SizedBox(height: 12),
 
                   DropdownButtonFormField<int>(
-                    value: _planSeleccionado,
+                    value: (_planSeleccionado != null && _tiposPrestamo.any((p) => (int.tryParse(p['id'].toString()) ?? -1) == _planSeleccionado)) ? _planSeleccionado : null,
                     decoration: _dropDecoration('Plan / Interés *'),
                     isExpanded: true,
-                    items: _tiposPrestamo.map((p) => DropdownMenuItem<int>(
-                      value: p['id'] as int,
-                      child: Text(p['nombre'].toString()),
-                    )).toList(),
+                    items: () {
+                      final seen = <int>{};
+                      final items = <DropdownMenuItem<int>>[];
+                      for (var p in _tiposPrestamo) {
+                        final val = int.tryParse(p['id'].toString()) ?? -1;
+                        if (val != -1 && !seen.contains(val)) {
+                          seen.add(val);
+                          items.add(DropdownMenuItem<int>(
+                            value: val,
+                            child: Text(p['nombre']?.toString() ?? 'Plan sin nombre'),
+                          ));
+                        }
+                      }
+                      return items;
+                    }(),
                     onChanged: (val) => setState(() => _planSeleccionado = val),
                     validator: (v) => v == null ? 'Selecciona un Plan' : null,
                   ),
