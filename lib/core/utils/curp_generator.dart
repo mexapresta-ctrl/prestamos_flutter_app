@@ -44,8 +44,12 @@ class CurpGenerator {
       String c2 = _firstConsonant(m.substring(1));
       String c3 = _firstConsonant(primerNombre.substring(1));
 
-      // 00 final generico. El RENAPO asigna la homoclave real.
-      String curp = '$root$fNac$s$est$c1$c2$c3' '00';
+      // Dígito diferenciador de siglo (Homonimia)
+      String homonimia = (fechaNacimiento.year < 2000) ? '0' : 'A';
+      String curp17 = '$root$fNac$s$est$c1$c2$c3$homonimia';
+      
+      String digitoVerificador = _calcularDigitoVerificador(curp17);
+      String curp = '$curp17$digitoVerificador';
       return curp.toUpperCase();
     } catch (e) {
       return '';
@@ -79,5 +83,19 @@ class CurpGenerator {
       return '${root.substring(0, 1)}X${root.substring(2)}';
     }
     return root;
+  }
+
+  static String _calcularDigitoVerificador(String curp17) {
+    const diccionario = '0123456789ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
+    int sum = 0;
+    for (int i = 0; i < 17; i++) {
+      int val = diccionario.indexOf(curp17[i]);
+      if (val < 0) val = 0;
+      sum += val * (18 - i);
+    }
+    int mod = sum % 10;
+    int check = 10 - mod;
+    if (check == 10) return '0';
+    return check.toString();
   }
 }

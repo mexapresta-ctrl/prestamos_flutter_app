@@ -427,7 +427,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
 
                   // Género
                   DropdownButtonFormField<String>(
-                    value: _genero,
+                    initialValue: _genero,
                     decoration: _dropDecoration('Género *'),
                     items: const [
                       DropdownMenuItem(value: 'Masculino', child: Text('Masculino')),
@@ -440,7 +440,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
 
                   // Estado de Nacimiento
                   DropdownButtonFormField<String>(
-                    value: _estadoNacimiento,
+                    initialValue: _estadoNacimiento,
                     decoration: _dropDecoration('Estado de Nacimiento *'),
                     isExpanded: true,
                     items: _estados.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
@@ -489,7 +489,9 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                           child: Center(child: CircularProgressIndicator()),
                         )
                       : DropdownButtonFormField<String>(
-                          value: _planSeleccionado,
+                          value: _planesDB.any((p) => 
+                              '${p['nombre'] ?? ''}${p['tasa_interes'] != null ? ' - ${p['tasa_interes']}%' : ''}' == _planSeleccionado
+                            ) ? _planSeleccionado : null,
                           decoration: _dropDecoration('Plan / Interés *'),
                           isExpanded: true,
                           items: _planesDB.map((p) {
@@ -523,7 +525,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                   const SizedBox(height: 12),
 
                   DropdownButtonFormField<String>(
-                    value: _avalParentesco,
+                    initialValue: _avalParentesco,
                     decoration: _dropDecoration('Parentesco con el Cliente *'),
                     isExpanded: true,
                     items: _parentescos.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
