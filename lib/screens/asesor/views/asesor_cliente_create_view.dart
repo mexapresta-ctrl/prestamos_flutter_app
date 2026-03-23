@@ -10,6 +10,7 @@ import '../../../widgets/custom_button.dart';
 import '../../../widgets/custom_input.dart';
 import '../../../core/config/supabase_config.dart';
 import '../../../core/providers/asesor_provider.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../../../core/utils/curp_generator.dart';
 
 class AsesorClienteCreateView extends ConsumerStatefulWidget {
@@ -41,7 +42,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
 
   String? _genero = 'Masculino';
   String? _estadoNacimiento = 'Ciudad de México';
-  String? _planSeleccionado;
+  int? _planSeleccionado;
 
   final _phoneMask = MaskTextInputFormatter(mask: '###-###-####', filter: {"#": RegExp(r'[0-9]')});
   final _avalPhoneMask = MaskTextInputFormatter(mask: '###-###-####', filter: {"#": RegExp(r'[0-9]')});
@@ -63,13 +64,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
     'VZ', 'YN', 'ZS', 'NE'
   ];
 
-  // Planes disponibles (Modalidades por Colores)
-  final List<String> _planes = [
-    'Plan Verde - 10%', 'Plan Amarillo - 15%', 'Plan Naranja - 20%',
-    'Plan Rojo - 25%', 'Plan Negro - 30%',
-  ];
-
-  // Parentescos
+  List<Map<String, dynamic>> _tiposPrestamo = [];
   final List<String> _parentescos = [
     'Padre', 'Madre', 'Hijo/a', 'Hermano/a', 'Cónyuge / Pareja',
     'Tío/a', 'Primo/a', 'Abuelo/a', 'Amigo/a', 'Vecino/a', 'Otro',
@@ -106,6 +101,24 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
   @override
   void initState() {
     super.initState();
+    _fetchPlanes();
+  }
+
+  Future<void> _fetchPlanes() async {
+    try {
+      final res = await SupabaseConfig.client
+          .from('tipos_prestamo')
+          .select('id, nombre, activo, color, ciclo, valor_pago')
+          .eq('activo', true)
+          .order('id');
+      if (mounted) {
+        setState(() {
+          _tiposPrestamo = List<Map<String, dynamic>>.from(res);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading planes: $e');
+    }
   }
 
   @override
@@ -227,7 +240,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
       final avalNombre = '${_avalNombreCtrl.text.trim()} ${_avalApePatCtrl.text.trim()} ${_avalApeMatCtrl.text.trim()}'.trim();
       final fullAddress = '${_calleCtrl.text.trim()} ${_numExtCtrl.text.trim()}, ${_coloniaCtrl.text.trim()}'.trim();
 
-      await SupabaseConfig.client.from('clientes').insert({
+      final newClienteRes = await SupabaseConfig.client.from('clientes').insert({
         'nombre': fullName,
         'nombres': nombres,
         'apellido_paterno': _apePatCtrl.text.trim(),
@@ -258,7 +271,62 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
         'foto_aval_url': urlAvalFirma,
         'aval_ine_frente_url': urlAvalIneF,
         'aval_ine_reverso_url': urlAvalIneR,
-      });
+      }).select('id').single();
+
+      final int clienteId = newClienteRes['id'];
+      final double montoSolicitado = double.tryParse(_montoSolicitadoCtrl.text.trim().replaceAll(',', '')) ?? 0;
+
+      if (montoSolicitado > 0 && _planSeleccionado != null) {
+        final planOpt = _tiposPrestamo.where((p) => p['id'] == _planSeleccionado).toList();
+        if (planOpt.isNotEmpty) {
+          final p = planOpt.first;
+          final double valorPago = double.tryParse(p['valor_pago'].toString()) ?? 0;
+          final int plazo = int.tryParse(p['total_pagos']?.toString() ?? '1') ?? 1;
+          final String ciclo = p['ciclo'] ?? '';
+          final String frecuencia = p['frecuencia'] ?? '';
+          final String nombrePlan = p['nombre'] ?? '';
+
+          double cuotaSemanal = 0;
+          double totalAPagar = 0;
+          final double factor = montoSolicitado / 1000;
+
+          if (ciclo == 'PORCENTAJE') {
+             final interesPorPeriodo = montoSolicitado * (valorPago / 100);
+             final interesTotal = interesPorPeriodo * plazo;
+             totalAPagar = montoSolicitado + interesTotal;
+             cuotaSemanal = totalAPagar / plazo;
+          } else {
+             int factorMultiplicador = 1;
+             if (frecuencia == 'Único (Día 20)') factorMultiplicador = 20;
+             else if (frecuencia == 'Único (Día 15)') factorMultiplicador = 15;
+
+             cuotaSemanal = valorPago * factor * factorMultiplicador;
+             totalAPagar = cuotaSemanal * plazo;
+          }
+
+          final userState = ref.read(authProvider);
+          final user = userState.user;
+
+          await SupabaseConfig.client.from('prestamos').insert({
+            'cliente_id': clienteId,
+            'asesor_id': user?.id,
+            'cobrador_id': user?.id,
+            'monto': montoSolicitado,
+            'plazo': plazo,
+            'tasa_interes': 0,
+            'cuota_semanal': cuotaSemanal,
+            'total_a_pagar': totalAPagar,
+            'estado': 'solicitado',
+            'tipo_prestamo_id': _planSeleccionado,
+            'nombre_plan': nombrePlan,
+            'frecuencia': frecuencia,
+            'cuotas_pagadas': 0,
+            'cuotas_totales': plazo,
+            'fecha_desembolso': null,
+            'fecha_aprobacion': null,
+          });
+        }
+      }
 
       if (!mounted) return;
       ref.read(asesorProvider.notifier).refresh();
@@ -470,11 +538,14 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                   ),
                   const SizedBox(height: 12),
 
-                  DropdownButtonFormField<String>(
-                    value: _planes.contains(_planSeleccionado) ? _planSeleccionado : null,
+                  DropdownButtonFormField<int>(
+                    value: _planSeleccionado,
                     decoration: _dropDecoration('Plan / Interés *'),
                     isExpanded: true,
-                    items: _planes.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+                    items: _tiposPrestamo.map((p) => DropdownMenuItem<int>(
+                      value: p['id'] as int,
+                      child: Text(p['nombre'].toString()),
+                    )).toList(),
                     onChanged: (val) => setState(() => _planSeleccionado = val),
                     validator: (v) => v == null ? 'Selecciona un Plan' : null,
                   ),
