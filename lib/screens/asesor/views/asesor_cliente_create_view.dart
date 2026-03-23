@@ -110,9 +110,10 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
   Future<void> _fetchPlanes() async {
     try {
       final res = await SupabaseConfig.client
-          .from('planes')
-          .select('id, nombre, tasa_interes, color')
-          .order('tasa_interes');
+          .from('tipos_pago')
+          .select('id, nombre, activo')
+          .eq('activo', true)
+          .order('id');
       if (mounted) {
         setState(() {
           _planesDB = List<Map<String, dynamic>>.from(res);
@@ -499,9 +500,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
                           decoration: _dropDecoration('Plan / Interés *'),
                           isExpanded: true,
                           items: _planesDB.map((p) {
-                            final nombre = p['nombre'] ?? '';
-                            final tasa = p['tasa_interes'] != null ? ' - ${p['tasa_interes']}%' : '';
-                            final display = '$nombre$tasa';
+                            final display = (p['nombre'] ?? '').toString();
                             return DropdownMenuItem<String>(value: display, child: Text(display));
                           }).toList(),
                           onChanged: (val) => setState(() => _planSeleccionado = val),
