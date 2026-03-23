@@ -5,9 +5,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_colors.dart';
 import '../auth/login_assets.dart';
-
 class UpdateScreen extends StatefulWidget {
   const UpdateScreen({super.key});
 
@@ -125,7 +125,13 @@ Sugerido, Fotografías y Nombres Segmentados) para mantener paridad con el Admin
         await file.delete();
       }
 
-      final dio = Dio();
+      final dio = Dio(BaseOptions(
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+          'Accept': 'application/octet-stream',
+        },
+      ));
+      
       await dio.download(
         _apkUrl,
         savePath,
@@ -165,6 +171,14 @@ Sugerido, Fotografías y Nombres Segmentados) para mantener paridad con el Admin
   Future<void> _installApk() async {
     if (_localPath != null) {
       await OpenFilex.open(_localPath!);
+    }
+  }
+
+  Future<void> _openInBrowser() async {
+    if (_apkUrl.isEmpty) return;
+    final uri = Uri.parse(_apkUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -298,30 +312,53 @@ Sugerido, Fotografías y Nombres Segmentados) para mantener paridad con el Admin
               if (_isLoadingInfo)
                 const Center(child: CircularProgressIndicator())
               else if (_isDone)
-                ElevatedButton.icon(
-                  onPressed: _installApk,
-                  icon: const Icon(Icons.system_update_alt),
-                  label: Text('Instalar Ahora', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                Center(
+                  child: Column(
+                    children: [
+                      const Icon(Icons.check_circle_rounded, color: Colors.green, size: 64),
+                      const SizedBox(height: 16),
+                      Text('¡Descarga Completa!', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green[700])),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.system_update_alt_rounded),
+                        label: const Text('Instalar Ahora'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.admin,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        onPressed: _installApk,
+                      ),
+                    ],
                   ),
                 )
               else if (!_isDownloading)
-                ElevatedButton.icon(
-                  onPressed: _startDownload,
-                  icon: const Icon(Icons.download_rounded),
-                  label: Text('Descargar Actualización', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: AppColors.admin,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
+                Column(
+                  children: [
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.download_rounded),
+                      label: const Text('Descargar Actualización'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.admin,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 56),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                      onPressed: _startDownload,
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton.icon(
+                      icon: const Icon(Icons.open_in_browser_rounded),
+                      label: const Text('Descarga Lenta? Usa el Navegador'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.grey[700],
+                      ),
+                      onPressed: _openInBrowser,
+                    ),
+                  ],
                 ),
 
               const SizedBox(height: 32),
