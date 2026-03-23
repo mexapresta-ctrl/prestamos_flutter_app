@@ -8,7 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/custom_button.dart';
 import '../auth/login_screen.dart';
-import 'views/asesor_cliente_wizard_view.dart';
+import 'views/asesor_cliente_create_view.dart';
 
 class AsesorDashboard extends ConsumerStatefulWidget {
   const AsesorDashboard({super.key});
@@ -47,7 +47,7 @@ class _AsesorDashboardState extends ConsumerState<AsesorDashboard> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const AsesorClienteWizardView()),
+              MaterialPageRoute(builder: (_) => const AsesorClienteCreateView()),
             );
           },
           backgroundColor: AppColors.asesor,
