@@ -115,7 +115,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
     try {
       final res = await SupabaseConfig.client
           .from('tipos_prestamo')
-          .select('id, nombre, activo, color, ciclo, valor_pago')
+          .select('id, nombre, activo, color, ciclo, valor_pago, frecuencia, total_pagos')
           .eq('activo', true)
           .order('id');
       if (mounted) {
