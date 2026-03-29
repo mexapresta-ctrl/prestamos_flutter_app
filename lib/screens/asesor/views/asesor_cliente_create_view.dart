@@ -190,13 +190,34 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
   }
 
   Future<void> _pickImage(Function(File?) onPicked) async {
-    try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.camera, imageQuality: 70);
-      if (image != null) setState(() { onPicked(File(image.path)); });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al abrir cámara: $e')));
-    }
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.admin),
+              title: const Text('Tomar Foto'),
+              onTap: () async {
+                Navigator.pop(context);
+                final image = await _picker.pickImage(source: ImageSource.camera, imageQuality: 70);
+                if (image != null) setState(() { onPicked(File(image.path)); });
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppColors.admin),
+              title: const Text('Elegir de la Galería'),
+              onTap: () async {
+                Navigator.pop(context);
+                final image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+                if (image != null) setState(() { onPicked(File(image.path)); });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<String?> _uploadImage(File file, String folder, String fileName) async {
