@@ -79,9 +79,9 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         if (globalNavigatorKey.currentState != null) {
           globalNavigatorKey.currentState!.pushAndRemoveUntil(
             PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const UpdateScreen(),
+              pageBuilder: (_, _, _) => const UpdateScreen(),
               transitionDuration: const Duration(milliseconds: 600),
-              transitionsBuilder: (_, anim, __, child) => FadeTransition(opacity: anim, child: child),
+              transitionsBuilder: (_, anim, _, child) => FadeTransition(opacity: anim, child: child),
             ),
             (route) => false, // Clears everything underneath
           );

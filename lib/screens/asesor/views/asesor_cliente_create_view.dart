@@ -257,7 +257,6 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
         'estado_nacimiento': _getClaveCurp(),
         'telefono': _telefonoCtrl.text.trim().replaceAll('-', ''),
         'oficio': _oficioCtrl.text.trim(),
-        'monto_solicitado': double.tryParse(_montoSolicitadoCtrl.text.trim().replaceAll(',', '')) ?? 0,
         'direccion': fullAddress,
         'calle': _calleCtrl.text.trim(),
         'numero_exterior': _numExtCtrl.text.trim(),
