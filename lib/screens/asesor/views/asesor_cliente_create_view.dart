@@ -269,6 +269,16 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
       final avalNombre = '${_avalNombreCtrl.text.trim()} ${_avalApePatCtrl.text.trim()} ${_avalApeMatCtrl.text.trim()}'.trim();
       final fullAddress = '${_calleCtrl.text.trim()} ${_numExtCtrl.text.trim()}, ${_coloniaCtrl.text.trim()}'.trim();
 
+      // Obtener el usuario actual (asesor) para vincular al cliente
+      final userState = ref.read(authProvider);
+      final user = userState.user;
+
+      // Formatear fecha de nacimiento para la BD (DD/MM/AAAA)
+      String? fechaNacStr;
+      if (_fechaNac != null) {
+        fechaNacStr = '${_fechaNac!.day.toString().padLeft(2, '0')}/${_fechaNac!.month.toString().padLeft(2, '0')}/${_fechaNac!.year}';
+      }
+
       final newClienteRes = await SupabaseConfig.client.from('clientes').insert({
         'nombre': fullName,
         'nombres': nombres,
@@ -283,6 +293,8 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
         'numero_exterior': _numExtCtrl.text.trim(),
         'colonia': _coloniaCtrl.text.trim(),
         'curp': _curpCtrl.text.trim(),
+        'dui': _curpCtrl.text.trim(),
+        'asesor_id': user?.id,
         'activo': true,
         'aval_nombre': avalNombre,
         'aval_parentesco': _avalParentesco,
@@ -335,9 +347,6 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
              totalAPagar = cuotaSemanal * plazo;
           }
 
-          final userState = ref.read(authProvider);
-          final user = userState.user;
-
           await SupabaseConfig.client.from('prestamos').insert({
             'cliente_id': clienteId,
             'asesor_id': user?.id,
@@ -348,6 +357,7 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
             'cuota_semanal': cuotaSemanal,
             'total_a_pagar': totalAPagar,
             'estado': 'solicitado',
+            'activo': true,
             'tipo_prestamo_id': _planSeleccionado,
             'nombre_plan': nombrePlan,
             'frecuencia': frecuencia,
@@ -362,7 +372,11 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
       if (!mounted) return;
       ref.read(asesorProvider.notifier).refresh();
       Navigator.pop(context, true);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cliente guardado exitosamente'), backgroundColor: AppColors.ok));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('✅ Cliente registrado y enviado al Administrador para autorización'),
+        backgroundColor: AppColors.ok,
+        duration: Duration(seconds: 4),
+      ));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al guardar cliente: $e'), backgroundColor: AppColors.error));

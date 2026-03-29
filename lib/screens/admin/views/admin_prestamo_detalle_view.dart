@@ -8,6 +8,7 @@ import '../../../core/models/prestamo_model.dart';
 import '../../../widgets/list_card.dart';
 import '../../../widgets/hero_card.dart' show Role;
 import '../../../core/utils/time_util.dart';
+import '../../../core/config/supabase_config.dart';
 import 'admin_cliente_detalle_view.dart';
 
 class AdminPrestamoDetalleView extends ConsumerWidget {
@@ -143,6 +144,127 @@ class AdminPrestamoDetalleView extends ConsumerWidget {
                 ),
 
                 const SizedBox(height: 16),
+
+                // ── Approve / Reject for 'solicitado' ──
+                if (prestamo.estado == 'solicitado') ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.asesorSurface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.asesor.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.pending_actions, color: AppColors.asesor, size: 20),
+                            SizedBox(width: 8),
+                            Text('Solicitud pendiente de autorización',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.asesor)),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text('Enviada por el asesor. Requiere tu aprobación para activar el préstamo.',
+                          style: TextStyle(fontSize: 12, color: AppColors.ink3)),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('¿Aprobar Préstamo?'),
+                                      content: Text('Vas a aprobar y activar el préstamo de ${cliente?.nombre ?? "este cliente"} por ${formatCurrency.format(prestamo.monto)}.'),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.pop(ctx, true),
+                                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.ok),
+                                          child: const Text('Sí, Aprobar', style: TextStyle(color: Colors.white)),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirmed == true) {
+                                    final now = TimeUtil.now().toIso8601String();
+                                    await SupabaseConfig.client.from('prestamos').update({
+                                      'estado': 'activo',
+                                      'fecha_desembolso': now,
+                                      'fecha_aprobacion': now,
+                                    }).eq('id', prestamo.id);
+                                    ref.read(adminProvider.notifier).refresh();
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('✅ Préstamo aprobado y activado'), backgroundColor: AppColors.ok),
+                                      );
+                                    }
+                                  }
+                                },
+                                icon: const Icon(Icons.check_circle, size: 18),
+                                label: const Text('Aprobar'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.ok,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () async {
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('¿Rechazar Préstamo?'),
+                                      content: Text('Vas a rechazar la solicitud de ${cliente?.nombre ?? "este cliente"}.'),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.pop(ctx, true),
+                                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                                          child: const Text('Sí, Rechazar', style: TextStyle(color: Colors.white)),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirmed == true) {
+                                    await SupabaseConfig.client.from('prestamos').update({
+                                      'estado': 'rechazado',
+                                      'activo': false,
+                                    }).eq('id', prestamo.id);
+                                    ref.read(adminProvider.notifier).refresh();
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('🚫 Préstamo rechazado'), backgroundColor: AppColors.error),
+                                      );
+                                    }
+                                  }
+                                },
+                                icon: const Icon(Icons.cancel, size: 18),
+                                label: const Text('Rechazar'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.error,
+                                  side: const BorderSide(color: AppColors.error),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
                 // ── Action Buttons ──
                 Row(
