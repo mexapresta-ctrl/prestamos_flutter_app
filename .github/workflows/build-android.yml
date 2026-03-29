@@ -47,8 +47,9 @@ jobs:
           path: |
             build/
             .dart_tool/
-          key: ${{ runner.os }}-flutter-build-${{ hashFiles('lib/**') }}-${{ hashFiles('pubspec.yaml') }}
+          key: ${{ runner.os }}-flutter-build-${{ github.ref_name }}-${{ github.sha }}
           restore-keys: |
+            ${{ runner.os }}-flutter-build-${{ github.ref_name }}-
             ${{ runner.os }}-flutter-build-
 
       - name: Get Dependencies
@@ -60,8 +61,9 @@ jobs:
           path: |
             ~/.gradle/caches/build-cache-*
             android/.gradle
-          key: ${{ runner.os }}-gradle-build-cache-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-build-cache-${{ github.ref_name }}-${{ github.sha }}
           restore-keys: |
+            ${{ runner.os }}-gradle-build-cache-${{ github.ref_name }}-
             ${{ runner.os }}-gradle-build-cache-
 
       - name: Build Signed Release APK
