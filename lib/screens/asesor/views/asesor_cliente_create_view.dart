@@ -459,8 +459,8 @@ class _AsesorClienteCreateViewState extends ConsumerState<AsesorClienteCreateVie
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: planColor.withOpacity(0.1),
-        border: Border.all(color: planColor.withOpacity(0.5)),
+        color: planColor.withValues(alpha: 0.1),
+        border: Border.all(color: planColor.withValues(alpha: 0.5)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
